@@ -13,7 +13,7 @@ optimise the code for performance.
 
 We use the Wilson gauge action throughout. At the present time, we offer
 
-   2. 2 flavour Wilson
+   1. 2 flavour Wilson
 
 fermion actions.
 

@@ -2,10 +2,7 @@
 
 export OMP_NUM_THREADS=4
 
-# Simple test script to demonstrate how to use the 2D U(1) code
-# The size of the lattice (L) is hardcoded in the main.cpp file
-# to make writing new code simpler. Please please edit and remake
-# if you wish to vary L.
+# Simple test script to demonstrate how to use the 2+eD U(1) code
 
 mkdir -p {gauge,data/{data,plaq,creutz,polyakov,rect,top,pion,vacuum,eig}}
 
