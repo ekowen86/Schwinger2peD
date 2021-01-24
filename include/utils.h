@@ -3,7 +3,6 @@
 #include "schwinger2peD_internal.h"
 #include "lattice.h"
 #include "blas.h"
-#include "hdf5.h"
 
 void printParams(param_t p);
 void constructName(string &name, param_t p);

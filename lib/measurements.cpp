@@ -206,7 +206,7 @@ double measGaugeAction(field3D<Complex> *gauge) {
   int Nx = gauge->p.Nx;
   int Ny = gauge->p.Ny;
   int Nz = gauge->p.Nz;
-#pragma	omp parallel for reduction (+:action)
+  //#pragma	omp parallel for reduction (+:action)
   for(int x=0; x<Nx; x++) {
     int xp1 = (x+1)%Nx;
     for(int y=0; y<Ny; y++) {
@@ -240,7 +240,7 @@ double measMomAction(field3D<double> *mom) {
   int Nx = mom->p.Nx;
   int Ny = mom->p.Ny;
   int Nz = mom->p.Nz;
-#pragma	omp parallel for reduction (+:action)
+  //#pragma	omp parallel for reduction (+:action)
   for(int x=0; x<Nx; x++)
     for(int y=0; y<Ny; y++)
       for(int z=0; z<Nz; z++)      
@@ -268,7 +268,7 @@ double measFermAction(field<Complex> *gauge, field<Complex> *phi, bool postStep)
   
   int Nx = gauge->p.Nx;
   int Ny = gauge->p.Ny;
-#pragma	omp parallel for reduction(+:action)
+  //#pragma	omp parallel for reduction(+:action)
   for(int x=0; x<Nx; x++)
     for(int y=0; y<Ny; y++){
       for(int mu=0; mu<2; mu++){
@@ -302,7 +302,7 @@ Complex measPlaq(field<Complex> *gauge) {
   int Ny = gauge->p.Ny;
   double norm = 1.0/(Nx * Ny);
   
-#pragma	omp parallel for reduction(+:plaq)
+  //#pragma	omp parallel for reduction(+:plaq)
   for(int x=0; x<Nx; x++) {
     int xp1 = (x+1)%Nx;
     for(int y=0; y<Ny; y++) {
