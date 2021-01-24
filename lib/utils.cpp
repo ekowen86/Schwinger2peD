@@ -23,7 +23,7 @@ void printParams(param_t p) {
 }
 
 void constructName(string &name, param_t p) {
-  name += "_LX" + to_string(p.Nx) + "_LY" + to_string(p.Ny) + "_B" + to_string(p.beta);
+  name += "_Lx" + to_string(p.Nx) + "_Ly" + to_string(p.Ny) + "_Lz" + to_string(p.Nz) + "_B" + to_string(p.beta) + "_Bz" + to_string(p.betaZ);
   if(p.dynamic == true) name += "_M"+ to_string(p.m);
   name += "_tau" + to_string(p.tau) + "_nHMCstep" + to_string(p.n_step);
 }
