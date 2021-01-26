@@ -87,9 +87,7 @@ void leapfrogHMC::trajectory(field3D<double> *mom3D, field3D<Complex> *gauge3D, 
 
     //P_{k+1/2} = P_{k-1/2} - dtau * (fU - fD)
     forceU(fU, gauge3D);
-
     extract2DSlice(gauge2D, gauge3D, (gauge3D->p.Nz - 1)/2);
-
     ave_iter += forceD(fD, phi, gauge2D, iter);
 
     update_mom(fU, fD, mom3D, dtau);
@@ -148,13 +146,13 @@ void leapfrogHMC::forceU(field3D<double> *fU, const field3D<Complex> *gauge3D) {
 	if(z != Nz-1) {
 	  // +x, +z, -x, -z
 	  plaq = gauge3D->read(x,y,z,0) * cUnit * conj(gauge3D->read(x,y,zp1,0)) * cUnit;
-	  temp += betaz*imag(plaq);
+	  temp += betaz*(plaq.imag());
 	}
 	
 	if(z != 0) {
 	  // -z, +x, +z, -x
 	  plaq = cUnit * gauge3D->read(x,y,zm1,0) * cUnit * conj(gauge3D->read(x,y,z,0));
-	  temp -= betaz*imag(plaq);
+	  temp -= betaz*(plaq.imag());
 	}
 
 	fU->write(x,y,z,0, temp);
@@ -174,13 +172,13 @@ void leapfrogHMC::forceU(field3D<double> *fU, const field3D<Complex> *gauge3D) {
 	if(z != Nz-1) {
 	  // y, z, -y, -z
 	  plaq = gauge3D->read(x,y,z,1) * cUnit * conj(gauge3D->read(x,y,zp1,1)) * cUnit;
-	  temp += betaz*imag(plaq);
+	  temp += betaz*(plaq.imag());
 	}
 	
 	if(z != 0) {
 	  // -z, +y, +z, -y
 	  plaq = cUnit * gauge3D->read(x,y,zm1,1) * cUnit * conj(gauge3D->read(x,y,z,1));
-	  temp -= betaz*imag(plaq);
+	  temp -= betaz*(plaq.imag());
 	}
 	
 	fU->write(x,y,z,1, temp);
@@ -210,11 +208,10 @@ void leapfrogHMC::update_mom(field3D<double> *fU, field<double> *fD, field3D<dou
   if(fU->p.dynamic == true) {
     for(int x=0; x<Nx; x++)
       for(int y=0; y<Ny; y++)
-	for(int z=0; z<Nz; z++)
-	  for(int mu=0; mu<2; mu++) {
-	    temp = mom->read(x,y,z,mu) + fD->read(x,y,mu)*dtau;
-	    mom->write(x,y,z,mu, temp);
-	  }
+	for(int mu=0; mu<2; mu++) {
+	  temp = mom->read(x,y,(Nz-1)/2,mu) + fD->read(x,y,mu)*dtau;
+	  mom->write(x,y,(Nz-1)/2,mu, temp);
+	}
   }
 }
 
