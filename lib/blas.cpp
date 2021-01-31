@@ -3,7 +3,7 @@
 namespace blas {
 
   /**
-     @brief asserts that two vectors have the same length   
+     @brief asserts that two vectors have the same length
   */
   void assertVectorLength(const std::vector<Complex> &x, const std::vector<Complex> &y,
 			  const char *func){
@@ -21,55 +21,65 @@ namespace blas {
     }
   }
 
-  
-  // Zero vector
-  void zero(std::vector<Complex> &x) {
-//#pragma omp parallel for
-    for(int i=0; i<(int)x.size(); i++) x[i] = 0.0;
-  }
 
-  // Zero vector
-  void zero(std::vector<double> &x) {
+// Zero vector (complex)
+void zero(std::vector<Complex> &x) {
+    std::fill(x.begin(), x.end(), 0.0);
 //#pragma omp parallel for
-    for(int i=0; i<(int)x.size(); i++) x[i] = 0.0;
-  }
+    // for(int i=0; i<(int)x.size(); i++) x[i] = 0.0;
+}
 
-  // Copy vector 
+// Zero vector (double)
+void zero(std::vector<double> &x) {
+    std::fill(x.begin(), x.end(), 0.0);
+//#pragma omp parallel for
+    // for(int i=0; i<(int)x.size(); i++) x[i] = 0.0;
+}
+
+  // Copy vector from y to x (complex)
   void copy(std::vector<Complex> &x, const std::vector<Complex> &y) {
     assertVectorLength(x,y,__func__);
 //#pragma omp parallel for
-    for(int i=0; i<(int)x.size(); i++) x[i] = y[i];
+    std::copy(y.begin(), y.end(), x.begin());
+    // for(int i=0; i<(int)x.size(); i++) x[i] = y[i];
   }
 
-  // Copy vector 
+  // Copy vector from y to x (double)
   void copy(std::vector<double> &x, const std::vector<double> &y) {
     assertVectorLength(x,y,__func__);
 //#pragma omp parallel for
-    for(int i=0; i<(int)x.size(); i++) x[i] = y[i];
+    std::copy(y.begin(), y.end(), x.begin());
+    // for(int i=0; i<(int)x.size(); i++) x[i] = y[i];
   }
 
   // Inner product
   Complex cDotProd(const std::vector<Complex> &x, const std::vector<Complex> &y) {
     Complex prod = 0.0;
     assertVectorLength(x,y,__func__);
-    ////#pragma omp parallel for reduction(+:prod)
+    //#pragma omp parallel for reduction(+:prod)
     for(int i=0; i<(int)x.size(); i++) prod += conj(x[i]) * y[i];
     return prod;
   }
-  
+
   // Norm squared
-  double norm2(std::vector<Complex> &x) { 
+  double norm2(const std::vector<Complex> &x) {
     double sum = 0.0;
 //#pragma omp parallel for reduction(+:sum)
-    for(int i=0; i<(int)x.size(); i++) sum += (conj(x[i]) * x[i]).real();
+    for(int i=0; i<(int)x.size(); i++) sum += norm(x[i]);
     return sum;
   }
-  
-  // Norm 
-  double norm(std::vector<Complex> &a) { 
-    return sqrt(real(blas::norm2(a)));
+
+    double norm2(const std::vector<double> &x) {
+        double sum = 0.0;
+        for (int i = 0; i < x.size(); i++) sum += x[i] * x[i];
+        return sum;
+    }
+
+  // Norm
+  double norm(const std::vector<Complex> &a) {
+    return sqrt(blas::norm2(a));
   }
-  
+
   // caxpby
   void caxpby(const Complex a, const std::vector<Complex> &x, const Complex b, std::vector<Complex> &y) {
     assertVectorLength(x,y,__func__);
@@ -89,7 +99,7 @@ namespace blas {
       y[i] += a*x[i];
     }
   }
-  
+
   // caxpy in place
   void caxpy(const Complex a, const std::vector<Complex> &x, std::vector<Complex> &y) {
     assertVectorLength(x,y,__func__);
@@ -98,7 +108,7 @@ namespace blas {
       y[i] += a*x[i];
     }
   }
-  
+
   // caxpy in result
   void caxpy(const Complex a, const std::vector<Complex> &x, const std::vector<Complex> &y, std::vector<Complex> &z) {
     assertVectorLength(x,y,__func__);
@@ -110,6 +120,15 @@ namespace blas {
 
   // axpy in place
   void axpy(const double a, const std::vector<Complex> &x, std::vector<Complex> &y) {
+    assertVectorLength(x,y,__func__);
+//#pragma omp parallel for
+    for(int i=0; i<(int)x.size(); i++) {
+      y[i] += a*x[i];
+    }
+  }
+
+  // axpy in place
+  void axpy(const double a, const std::vector<double> &x, std::vector<double> &y) {
     assertVectorLength(x,y,__func__);
 //#pragma omp parallel for
     for(int i=0; i<(int)x.size(); i++) {
@@ -141,10 +160,17 @@ namespace blas {
     }
   }
 
+  void ax(const double a, std::vector<double> &x) {
+//#pragma omp parallel for
+    for(int i=0; i<(int)x.size(); i++) {
+      x[i] *= a;
+    }
+  }
+
   // Print the vector elements
   void printVector(const std::vector<Complex> &x){
     for(int i=0; i<(int)x.size(); i++)
-      cout << "elem["<<i<<"] = ("<< x[i].real() << "," << x[i].imag() <<")" << endl; 
+      cout << "elem["<<i<<"] = ("<< x[i].real() << "," << x[i].imag() <<")" << endl;
   }
 
 }

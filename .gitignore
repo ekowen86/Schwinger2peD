@@ -1,0 +1,14 @@
+# macOS system files
+.DS_Store
+
+# jobs directory
+jobs/
+wilson/
+
+# plots
+*.pdf
+
+# executable files
+schwinger2peD
+testDirac
+testHMC

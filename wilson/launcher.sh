@@ -13,18 +13,18 @@ BETA=3.0
 BETAZ=1.0
 
 # The total number of HMC iterations to perform.
-HMC_ITER=20000
+HMC_ITER=1000
 # The number of HMC iterations for thermalisation.
-HMC_THERM=500
+HMC_THERM=50
 
 # The number of HMC iterations to skip bewteen measurements.
 HMC_SKIP=10
 # Dump the gauge field every HMC_CHKPT iterations after thermalisation.
-HMC_CHKPT=10
-# If non-zero, read in the HMC_CHKPT_START gauge field. 
+HMC_CHKPT=20
+# If non-zero, read in the HMC_CHKPT_START gauge field.
 HMC_CHKPT_START=0
-# HMC time steps in the integration 
-HMC_NSTEP=12
+# HMC time steps in the integration
+HMC_NSTEP=30
 # HMC trajectory time
 HMC_TAU=1.0
 
@@ -37,14 +37,14 @@ APE_ALPHA=0.5
 RNG_SEED=1234
 
 # DYNAMIC (1) or QUENCHED (0)
-DYN_QUENCH=0
+DYN_QUENCH=1
 
 # LOCKED (1) or DYNAMIC (0)
 LOCKED_Z=1
 
 # Dynamic fermion parameters
 # Fermion mass
-MASS=0.01
+MASS=0.2
 # Maximum CG iterations
 MAX_CG_ITER=10000
 # CG tolerance
@@ -62,12 +62,12 @@ MEAS_VT=1
 
 LX=16
 LY=16
-LZ=5
+LZ=1
 
-command="./wilson2peD $BETA $BETAZ $HMC_ITER $HMC_THERM $HMC_SKIP $HMC_CHKPT 
-         $HMC_CHKPT_START $HMC_NSTEP $HMC_TAU $APE_ITER $APE_ALPHA $RNG_SEED 
-	 $DYN_QUENCH $LOCKED_Z $MASS $MAX_CG_ITER $CG_EPS $MEAS_PC $MEAS_WL 
-	 $LX $LY $LZ"
+command="./wilson2peD $BETA $BETAZ $HMC_ITER $HMC_THERM $HMC_SKIP $HMC_CHKPT
+    $HMC_CHKPT_START $HMC_NSTEP $HMC_TAU $APE_ITER $APE_ALPHA $RNG_SEED
+    $DYN_QUENCH $LOCKED_Z $MASS $MAX_CG_ITER $CG_EPS $MEAS_PC $MEAS_WL $MEAS_VT
+    $LX $LY $LZ"
 
 echo $command
 

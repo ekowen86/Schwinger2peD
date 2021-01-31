@@ -14,7 +14,7 @@ inline constexpr const char* file_name(const char* str) { return str_slant(str) 
 namespace blas {
 
   /**
-     @brief asserts that two vectors have the same length   
+     @brief asserts that two vectors have the same length
   */
   void assertVectorLength(const std::vector<Complex> &x, const std::vector<Complex> &y, const char *func);
 
@@ -22,27 +22,28 @@ namespace blas {
 
   // Zero vector
   void zero(std::vector<Complex> &x);
-  
+
   // Zero vector
   void zero(std::vector<double> &x);
 
-  // Copy vector 
+  // Copy vector
   void copy(std::vector<Complex> &x, const std::vector<Complex> &y);
 
-  // Copy vector 
+  // Copy vector
   void copy(std::vector<double> &x, const std::vector<double> &y);
-  
+
   // Inner product
   Complex cDotProd(const std::vector<Complex> &x, const std::vector<Complex> &y);
-  
-  // Norm squared 
-  double norm2(std::vector<Complex> &x);
-  
-  // Norm squared 
-  double norm2(Complex *x, int size);
-  
-  // Norm 
-  double norm(std::vector<Complex> &a);
+
+  // Norm squared
+  double norm2(const std::vector<Complex> &x);
+  double norm2(const std::vector<double> &x);
+
+  // Norm squared
+  double norm2(const Complex *x, int size);
+
+  // Norm
+  double norm(const std::vector<Complex> &a);
 
   // caxpby
   void caxpby(const Complex a, const std::vector<Complex> &x, const Complex b, std::vector<Complex> &y);
@@ -58,16 +59,18 @@ namespace blas {
 
   // axpy in place
   void axpy(const double a, const std::vector<Complex> &x, std::vector<Complex> &y);
+  void axpy(const double a, const std::vector<double> &x, std::vector<double> &y);
 
   // axpy in result
   void axpy(const double a, const std::vector<Complex> &x, const std::vector<Complex> &y, std::vector<Complex> &z);
-  
+
   // cax
   void cax(const Complex a, std::vector<Complex> &x);
-  
+
   // ax
   void ax(const double a, std::vector<Complex> &x);
-  
+  void ax(const double a, std::vector<double> &x);
+
   // Print the vector elements
   void printVector(const std::vector<Complex> &x);
 

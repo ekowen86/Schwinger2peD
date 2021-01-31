@@ -1,9 +1,9 @@
 #pragma once
 
 #include "schwinger2peD_internal.h"
-#include "blas.h"
+#include "lattice.h"
 
-using namespace std;
-
-void writeGauge(field<Complex> *gauge, string name);
-void readGauge(field<Complex> *gauge, string name);
+void writeGaugeText(field3D<Complex> *gauge, string name);
+void readGaugeText(field3D<Complex> *gauge, string name);
+void writeGaugeBinary(field3D<Complex>& gauge, string name);
+void readGaugeBinary(field3D<Complex>& gauge, string name);

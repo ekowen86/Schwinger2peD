@@ -2,12 +2,12 @@
 
 #include "schwinger2peD_internal.h"
 #include "lattice.h"
-#include "blas.h"
+// #include "blas.h"
 
 void printParams(param_t p);
 void constructName(string &name, param_t p);
-void writeGauge(field3D<Complex> *gauge, string name);
-void readGauge(field3D<Complex> *gauge, string name);
+// void writeGauge(field3D<Complex> *gauge, string name);
+// void readGauge(field3D<Complex> *gauge, string name);
 
 void gaussStart(field3D<Complex> *gauge);
 void coldStart(field3D<Complex> *gauge);
@@ -25,6 +25,10 @@ void gaussComplex(field<Complex> *field);
 //APE smearing: project back on U(1)
 // staple x is 0th, y is 1st.
 void smearLink(field<Complex> *smeared, field<Complex> *gauge);
+
+Complex staple(field<Complex>& gauge, int x, int y, int mu);
+void wilsonFlow(field<Complex>& gauge, double dt);
+void coolLink(field<Complex>& gauge, int nCool = 0);
 
 // Extract 2D lattice slice
 void extract2DSlice(field<Complex> *gauge,
