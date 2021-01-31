@@ -3,7 +3,7 @@ SRC = lib/blas.cpp lib/dirac_op.cpp lib/hmc.cpp lib/inverters.cpp \
 	lib/io.cpp lib/measurements.cpp lib/utils.cpp
 
 CXX = g++
-CXXFLAGS = -O3 -std=c++0x
+CXXFLAGS = -static-libstdc++ -O3 -std=c++0x
 
 all: schwinger2peD testDirac testHMC
 
