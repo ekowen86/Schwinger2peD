@@ -2,7 +2,8 @@
 .DS_Store
 
 # jobs directory
-jobs/
+jobs/2D/
+jobs/3D/
 wilson/
 
 # plots

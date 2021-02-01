@@ -17,8 +17,8 @@ void writeTopoCharge(field3D<Complex>& gauge, int n);
 
 int main(int argc, char **argv) {
 
-    if (argc != 10) {
-        printf("Error: Invalid command line arguments.");
+    if (argc != 12) {
+        printf("Error: Invalid command line arguments.\n");
         return 1;
     }
 
@@ -42,8 +42,8 @@ int main(int argc, char **argv) {
     p.betaZ = beta * eps3;
     p.m = m;
 
-    p.n_step = 30;
-    p.tau = 1.0;
+    p.n_step = atoi(argv[10]); printf("hmcSteps: %d\n", p.n_step);
+    p.tau = stod(argv[11]); printf("hmcTau: %.3f\n", p.tau);
 
     p.dynamic = true;
     p.lockedZ = true;
