@@ -8,12 +8,24 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-L = int(32) # lattice size
+L = int(sys.argv[1]) # lattice size
+print("L: %d" % (L))
+beta = float(sys.argv[2])
+print("beta: %f" % (beta))
+m_fermion = float(sys.argv[3])
+print("m_fermion: %f" % (m_fermion))
 R_half = int(L / 2) # half lattice size
-R_min = 10 # min R value for fit
+R_min = int(sys.argv[4]) # min R value for fit
+print("R_min: %d" % (R_min))
 R_max = R_half # max R value for fit
 first_id = 100 # first configuration id
 
+m_sign = "p"
+if m_fermion < 0.0:
+    m_sign = "m"
+
+id = "%d_%d_%s%d" % (L, beta * 1000, m_sign, abs(m_fermion) * 1000)
+print("id: %s" % (id))
 
 def corr_fit(r, m, z):
 	a = 0.0
@@ -40,7 +52,7 @@ def pion_mass(corr):
 		corr_bar[i] = np.mean(corr[i]);
 		d_corr[i] = np.std(corr[i]) / np.sqrt(n);
 
-	popt, pcov = opt.curve_fit(corr_fit, r[R_min-1:R_max], corr_bar[R_min-1:R_max], [0.05, 1.0], sigma=d_corr[R_min-1:R_max])
+	popt, pcov = opt.curve_fit(corr_fit, r[R_min-1:R_max], corr_bar[R_min-1:R_max], [1.0, 1.0], sigma=d_corr[R_min-1:R_max])
 	m = popt[0]
 	d_m = np.sqrt(pcov[0][0])
 	z = popt[1]
@@ -92,12 +104,17 @@ def parse_data_file(file):
 	return a
 
 
-pion_file = open("./pion_corr/pion_corr.dat", "r")
+pion_file = open("./jobs/2D/%s/pion_corr/pion_corr.dat" % (id), "r")
 C_pi = parse_data_file(pion_file)
 m_bar, d_m, z_bar, d_z = jackknife_pion_mass(C_pi)
+pion_file.close()
 
 print("m = %.12f (%.12f)" % (m_bar, d_m))
 print("z = %.12f (%.12f)" % (z_bar, d_z))
+
+mass_file = open("../jobs/2D/pi_mass_%d_%d.dat" % (L, beta * 1000), "a")
+mass_file.write("%.3f %.12e %.12e\n" % (m_fermion, m_bar, d_m))
+mass_file.close()
 
 n = R_half + 1
 R = np.empty(n)
@@ -128,5 +145,5 @@ plt.errorbar(R, corr_bar, yerr=d_corr, color="blue", marker='o', ms=5, mew=0.5, 
 plt.plot(R_A, corr_A, color="blue", linewidth=0.5)
 plt.xlabel(r"$t$")
 plt.ylabel(r"$\langle C_{\pi}(0) C_{\pi}(t) \rangle $")
-plt.savefig("./plots/pi_corr.pdf")
+plt.savefig("../jobs/2D/%s/plots/pi_corr.pdf" % (id))
 plt.close()
