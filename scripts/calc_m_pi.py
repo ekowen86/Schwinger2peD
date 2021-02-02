@@ -28,17 +28,17 @@ id = "%d_%d_%s%d" % (L, beta * 1000, m_sign, abs(m_fermion) * 1000)
 print("id: %s" % (id))
 
 def corr_fit(r, m, z):
-	a = 0.0
+	# a = 0.0
+    #
+	# # this includes periodic finite size effects from 5 lattices away (only affects z, not m)
+	# for n in range(-5, 6):
+	# 	a += z * np.exp(-m * abs(r - L * n))
+    #
+	# return a
 
-	# this includes periodic finite size effects from 5 lattices away
-	for n in range(-5, 6):
-		a += z * np.exp(-m * abs(r - L * n))
-
-	return a
-
-# 	a = z * np.exp(-m * r)
-# 	b = z * np.exp(-m * (L - r))
-# 	return a + b
+	a = z * np.exp(-m * r)
+	b = z * np.exp(-m * (L - r))
+	return a + b
 
 
 def pion_mass(corr):

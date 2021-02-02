@@ -43,7 +43,7 @@ def parse_data_file(file):
 
 
 def cc_fit(m, p0):
-	return p0 - 0.388 * (m + mc)**(1.0/3.0) * g**(2.0/3.0)
+	return p0 - 0.388 * np.sign(m + mc) * np.abs(m + mc)**(1.0/3.0) * g**(2.0/3.0)
 
 
 cc_file = open("../jobs/2D/cc_%s.dat" % (id), "r")
