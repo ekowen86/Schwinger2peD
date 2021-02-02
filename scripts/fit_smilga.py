@@ -8,9 +8,9 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-L = int(sys.argv[0])
+L = int(sys.argv[1])
 print("L: %d" % (L))
-beta = float(sys.argv[1])
+beta = float(sys.argv[2])
 print("beta: %f" % (beta))
 
 id = "%d_%d" % (L, beta * 1000)
@@ -42,7 +42,7 @@ def parse_data_file(file):
 def m_fit(m, mc, g):
 	return 2.008 * np.absolute(m + mc)**(2.0/3.0) * g**(1.0/3.0)
 
-def cc_fit(m, g):
+def cc_fit(m, mc, g):
 	return -0.388 * np.sign(m + mc) * np.abs(m + mc)**(1.0/3.0) * g**(2.0/3.0)
 
 
@@ -56,35 +56,37 @@ popt, pcov = opt.curve_fit(m_fit, m_pi[0], m_pi[1], [0.35, 1.0 / np.sqrt(beta)],
 mc = (popt[0], np.sqrt(pcov[0][0]))
 g = (popt[1], np.sqrt(pcov[1][1]))
 
-print("mc = %.12f (%.12f)" % (mc[0], d_mc[1]))
-print("g  = %.12f (%.12f)" % (g[0], d_g[1]))
+print("mc = %.12f (%.12f)" % (mc[0], mc[1]))
+print("g  = %.12f (%.12f)" % (g[0], g[1]))
 
-	
+
 # read chiral condensate data
 cc_file = open("../jobs/2D/cc_%s.dat" % (id), "r")
 cc = parse_data_file(cc_file)
 
+m_min = -0.4
+m_max = 0.2
+
 # create best fit curve data
-m_A = np.linspace(-mc[0], 0.5, 1000)
+m_A = np.linspace(-mc[0], m_max, 1000)
 cc_A = np.empty(len(m_A))
 M_A = np.empty(len(m_A))
 for i in range(0, len(m_A)):
 	M_A[i] = m_fit(m_A[i], mc[0], g[0])
-	cc_A[m] = cc_fit(m_A[m], p0)
+	cc_A[i] = cc_fit(m_A[i], mc[0], g[0])
 
 
 plt.rcParams.update({
 	"text.usetex": False,
 	"font.family": "sans-serif"})
 
-m_min = -0.4
-m_max = 0.2
 
 # plot M vs m
 plt.figure()
 plt.xlim(m_min, m_max)
-plt.errorbar(m_pi[0], m_pi[1], yerr=m_pi[2], color="blue", marker='o', ms=5, mew=0.5, mfc='none', linestyle='none', linewidth=0.5, capsize=2.5, capthick=0.5)
-plt.plot(m_A, M_A, color="blue", linewidth=0.5)
+plt.errorbar(m_pi[0], m_pi[1], yerr=m_pi[2], color="black", marker='o', ms=5, mew=0.5, mfc='none', linestyle='none', linewidth=0.5, capsize=2.5, capthick=0.5)
+plt.plot(m_A, M_A, color="black", linewidth=0.5, linestyle='dashed', label=(r"$M_\pi = 2.008 (m_0 + m_c)^{2/3} g^{1/3}$" + "\n $m_c = %.3f \pm %.3f$\n $g = %.3f \pm %.3f$" % (mc[0], mc[1], g[0], g[1])))
+plt.legend(loc='center left', fontsize=10, handlelength=2.5, frameon=False)
 plt.xlabel("$m_0$")
 plt.ylabel("$M_{\pi}$")
 plt.savefig("../jobs/2D/pi_mass_%s.pdf" % (id))
@@ -93,8 +95,9 @@ plt.close()
 # plot cc vs m
 plt.figure()
 plt.xlim(m_min, m_max)
-plt.errorbar(cc[0], cc[1], yerr=cc[2], color="blue", marker='o', ms=5, mew=0.5, mfc='none', linestyle='none', linewidth=0.5, capsize=2.5, capthick=0.5)
-plt.plot(m_A, cc_A, color="blue", linewidth=0.5)
+plt.errorbar(cc[0], cc[1], yerr=cc[2], color="black", marker='o', ms=5, mew=0.5, mfc='none', linestyle='none', linewidth=0.5, capsize=2.5, capthick=0.5)
+plt.plot(m_A, cc_A, color="black", linewidth=0.5, linestyle='dashed', label=(r"$M_\pi = -0.388 (m_0 + m_c)^{1/3} g^{2/3}$" + "\n $m_c = %.3f \pm %.3f$\n $g = %.3f \pm %.3f$" % (mc[0], mc[1], g[0], g[1])))
+plt.legend(loc='center right', fontsize=10, handlelength=2.5, frameon=False)
 plt.xlabel(r"$m_0$")
 plt.ylabel(r"$\langle \bar{\psi} \psi \rangle$")
 plt.savefig("../jobs/2D/cc_%s.pdf" % (id))
