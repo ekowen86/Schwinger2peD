@@ -3,13 +3,16 @@
 L=$1
 BETA=$2
 
-M_START=-0.26
-M_END=-0.32
+# mass range
+M_START=0.40
+M_END=-0.30
 M_INC=-0.02
 
+# hmc parameters
 N_STEP=25
 TAU=0.1
 
+# number of trajectories
 N_THERM=200
 N_SKIP=20
 N_TRAJ=2000
@@ -44,7 +47,7 @@ do
     mkdir -p {ckpoint,topo_charge,vacuum_trace,pion_corr,plots}
 
     # create a script file with the executable and parameters
-    echo "#!/bin/bash" >> run_${ID}.sh
+    echo "#!/bin/bash" > run_${ID}.sh
 
     echo ../../../schwinger2peD \
     ${L} ${L} 1 ${BETA} 1.0 ${M} \

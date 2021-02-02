@@ -43,7 +43,7 @@ def m_fit(m, mc):
 	return 2.008 * np.absolute(m + mc)**(2.0/3.0) * g**(1.0/3.0)
 
 
-mass_file = open("jobs/2D/pi_mass_%s.dat" % (id), "r")
+mass_file = open("../jobs/2D/pi_mass_%s.dat" % (id), "r")
 m_pi = parse_data_file(mass_file)
 
 # calculate best fit for M_pi vs m_fermion

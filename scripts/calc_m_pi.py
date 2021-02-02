@@ -104,7 +104,7 @@ def parse_data_file(file):
 	return a
 
 
-pion_file = open("./jobs/2D/%s/pion_corr/pion_corr.dat" % (id), "r")
+pion_file = open("../jobs/2D/%s/pion_corr/pion_corr.dat" % (id), "r")
 C_pi = parse_data_file(pion_file)
 m_bar, d_m, z_bar, d_z = jackknife_pion_mass(C_pi)
 pion_file.close()
