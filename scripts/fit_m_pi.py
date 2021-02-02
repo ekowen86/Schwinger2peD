@@ -12,7 +12,6 @@ L = int(sys.argv[1]) # lattice size
 print("L: %d" % (L))
 beta = float(sys.argv[2])
 print("beta: %f" % (beta))
-g = 1.0 / np.sqrt(beta)
 
 id = "%d_%d" % (L, beta * 1000)
 print("id: %s" % (id))
@@ -39,7 +38,7 @@ def parse_data_file(file):
 	return a
 
 
-def m_fit(m, mc):
+def m_fit(m, mc, g):
 	return 2.008 * np.absolute(m + mc)**(2.0/3.0) * g**(1.0/3.0)
 
 
@@ -47,16 +46,19 @@ mass_file = open("../jobs/2D/pi_mass_%s.dat" % (id), "r")
 m_pi = parse_data_file(mass_file)
 
 # calculate best fit for M_pi vs m_fermion
-popt, pcov = opt.curve_fit(m_fit, m_pi[0], m_pi[1], [0.35], sigma=m_pi[2])
+popt, pcov = opt.curve_fit(m_fit, m_pi[0], m_pi[1], [0.35, 1.0 / np.sqrt(beta)], sigma=m_pi[2])
 mc = popt[0]
 d_mc = np.sqrt(pcov[0][0])
+g = popt[1]
+d_g = np.sqrt(pcov[1][1])
 
-print("mc    = %.12f (%.12f)" % (mc, d_mc))
+print("mc = %.12f (%.12f)" % (mc, d_mc))
+print("g  = %.12f (%.12f)" % (g, d_g))
 
 m_A = np.linspace(-mc, 0.5, 1000)
 M_A = np.empty(len(m_A))
 for m in range(0, len(m_A)):
-	M_A[m] = m_fit(m_A[m], mc)
+	M_A[m] = m_fit(m_A[m], mc, g)
 
 plt.rcParams.update({
 	"text.usetex": False,

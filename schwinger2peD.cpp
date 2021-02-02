@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
     p.dynamic = true;
     p.lockedZ = true;
-    p.max_iter_cg = 1000;
+    p.max_iter_cg = 10000;
     p.eps = 1e-16;
 
     // Lattice size
