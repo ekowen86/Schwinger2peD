@@ -61,6 +61,6 @@ typedef struct {
   bool meas_pc = false; //Pion
   bool meas_vt = false; //Vacuum Trace
 
-  std::mt19937 gen; // random number generator
+  std::mt19937* gen; // random number generator
 
 } param_t;

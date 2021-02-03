@@ -6,7 +6,7 @@ using namespace std;
 void writeGaugeText(field3D<Complex> *gauge, string name){
 
   fstream outPutFile;
-  outPutFile.open(name,ios::in|ios::out|ios::trunc);
+  outPutFile.open(name, ios::out | ios::trunc);
   outPutFile.setf(ios_base::fixed,ios_base::floatfield);
 
   int Nx = gauge->p.Nx;
@@ -25,7 +25,7 @@ void writeGaugeText(field3D<Complex> *gauge, string name){
 void readGaugeText(field3D<Complex> *gauge, string name)
 {
   fstream inPutFile;
-  inPutFile.open(name);
+  inPutFile.open(name, ios::in);
   string val;
   if(!inPutFile.is_open()) {
     cout << "Error opening file " << name << endl;
@@ -52,8 +52,7 @@ void readGaugeText(field3D<Complex> *gauge, string name)
 
 void writeGaugeBinary(field3D<Complex>& gauge, string name){
 
-    ofstream file;
-    file.open(name, ofstream::out | ofstream::trunc | ofstream::binary);
+    ofstream file(name, ios::out | ios::trunc | ios::binary);
 
     int Nx = gauge.p.Nx;
     int Ny = gauge.p.Ny;
@@ -63,18 +62,12 @@ void writeGaugeBinary(field3D<Complex>& gauge, string name){
     double valueI;
     char* pR = reinterpret_cast<char*>(&valueR);
     char* pI = reinterpret_cast<char*>(&valueI);
-    for (int x = 0; x < Nx; x++) {
-        for (int y = 0; y < Ny; y++) {
-            for (int z = 0; z < Nz; z++) {
-                for (int mu = 0; mu < 2; mu++) {
-                    value = gauge.read(x,y,z,mu);
-                    valueR = real(value);
-                    valueI = imag(value);
-                    file.write(pR, sizeof(double));
-                    file.write(pI, sizeof(double));
-                }
-            }
-        }
+    for (int i = 0; i < gauge.data.size(); i++) {
+        value = gauge.data[i];
+        valueR = real(value);
+        valueI = imag(value);
+        file.write(pR, sizeof(double));
+        file.write(pI, sizeof(double));
     }
 
     file.close();
@@ -82,8 +75,7 @@ void writeGaugeBinary(field3D<Complex>& gauge, string name){
 
 void readGaugeBinary(field3D<Complex>& gauge, string name){
 
-    ifstream file;
-    file.open(name, ifstream::binary);
+    ifstream file(name, ios::in | ios::binary);
 
     int Nx = gauge.p.Nx;
     int Ny = gauge.p.Ny;
@@ -92,17 +84,28 @@ void readGaugeBinary(field3D<Complex>& gauge, string name){
     double valueI;
     char* pR = reinterpret_cast<char*>(&valueR);
     char* pI = reinterpret_cast<char*>(&valueI);
-    for (int x = 0; x < Nx; x++) {
-        for (int y = 0; y < Ny; y++) {
-            for (int z = 0; z < Nz; z++) {
-                for (int mu = 0; mu < 2; mu++) {
-                    file.read(pR, sizeof(double));
-                    file.read(pI, sizeof(double));
-                    gauge.write(x,y,z,mu,Complex(valueR,valueI));
-                }
-            }
-        }
+    for (int i = 0; i < gauge.data.size(); i++) {
+        file.read(pR, sizeof(double));
+        file.read(pI, sizeof(double));
+        gauge.data[i] = Complex(valueR,valueI);
     }
 
+    file.close();
+}
+
+void writeRngState(field3D<Complex>& gauge, string name){
+
+    ofstream file(name, ios::out | ios::trunc);
+    file.setf(ios::dec | ios::left);
+    file.fill(' ');
+    file << *gauge.p.gen;
+    file.close();
+}
+
+void readRngState(field3D<Complex>& gauge, string name){
+
+    ifstream file(name, ios::in);
+    file.setf(ios::dec);
+    file >> *gauge.p.gen;
     file.close();
 }

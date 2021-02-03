@@ -17,7 +17,7 @@ void writeTopoCharge(field3D<Complex>& gauge, int n);
 
 int main(int argc, char **argv) {
 
-    if (argc != 12) {
+    if (argc < 12) {
         printf("Error: Invalid command line arguments.\n");
         return 1;
     }
@@ -55,35 +55,48 @@ int main(int argc, char **argv) {
     p.Ny = Ny;
     p.Nz = Nz;
     p.zCenter = (p.Nz - 1) / 2;
-    p.gen = mt19937(1234);
+    mt19937 gen(1234);
+    p.gen = &gen;
 
     field<Complex> gauge2D(p);
     field3D<Complex> gauge3D(p);
 
-    gaussStart(&gauge3D); // hot start
+    int nCkpoint = 0;
+    if (argc == 12) {
+        hotStart(&gauge3D); // hot start
+    } else {
+        nCkpoint = atoi(argv[12]);
+        printf("checkPoint: %d\n", nCkpoint);
+        nTherm = 0; // no thermalization for checkpoint start
+        char ckpointPath[50];
+        sprintf(ckpointPath, "ckpoint/ckpoint.%d", nCkpoint);
+        readGaugeBinary(gauge3D, ckpointPath);
+        char rngPath[50];
+        sprintf(rngPath, "ckpoint/rng.%d", nCkpoint);
+        readRngState(gauge3D, rngPath);
+    }
 
     leapfrogHMC HMCStep(p);
     int accept = 0;
     double dH_sum = 0.0;
-    double exp_dH_sum = 0.0;
+    double exp_dH_sum = 1.0;
     int nStuck = 0;
     int prevTopoCharge = 0;
 
-    // thermalize
-    for (int n = 0; n <= (nTherm + nTraj); n++) {
+    for (int n = nCkpoint; n <= (nTherm + nTraj + nCkpoint); n++) {
 
-        // no hmc for initial trajectory
-        // no metropolis for first half of thermalization
-        if (n) {
-            accept += HMCStep.hmc(&gauge3D, n < (nTherm / 2));
+        // no hmc for initial configuration
+        if (n != nCkpoint) {
+            // no metropolis for first half of thermalization
+            accept += HMCStep.hmc(gauge3D, n < (nTherm / 2));
             dH_sum += HMCStep.dH;
             exp_dH_sum += HMCStep.exp_dH;
             int topoCharge = quickTopoCharge(gauge3D);
             if (topoCharge == prevTopoCharge) nStuck++;
+        } else if (nCkpoint) {
+            // don't write initial output for checkpoint start
+            continue;
         }
-
-        // write topological charge every trajectory
-        // writeTopoCharge(gauge3D, n);
 
         if (n % nSkip) continue;
 
@@ -91,6 +104,9 @@ int main(int argc, char **argv) {
         char ckpointPath[50];
         sprintf(ckpointPath, "ckpoint/ckpoint.%d", n);
         writeGaugeBinary(gauge3D, ckpointPath);
+        char rngPath[50];
+        sprintf(rngPath, "ckpoint/rng.%d", n);
+        writeRngState(gauge3D, rngPath);
 
         extract2DSlice(&gauge2D, &gauge3D, p.zCenter);
         measVacuumTrace(&gauge2D, n);

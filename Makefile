@@ -5,7 +5,7 @@ SRC = lib/blas.cpp lib/dirac_op.cpp lib/hmc.cpp lib/inverters.cpp \
 CXX = g++
 CXXFLAGS = -static-libstdc++ -O3 -std=c++0x
 
-all: schwinger2peD testDirac testHMC
+all: schwinger2peD testDirac testHMC testIO
 
 schwinger2peD: schwinger2peD.cpp $(SRC) $(INCPATH)/* Makefile
 	@echo Compiling schwinger2peD...
@@ -18,3 +18,7 @@ testDirac: testDirac.cpp $(SRC) $(INCPATH)/* Makefile
 testHMC: testHMC.cpp $(SRC) $(INCPATH)/* Makefile
 	@echo Compiling testHMC...
 	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(SRC) testHMC.cpp -o $@
+
+testIO: testIO.cpp $(SRC) $(INCPATH)/* Makefile
+	@echo Compiling testIO...
+	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(SRC) testIO.cpp -o $@

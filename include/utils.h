@@ -9,10 +9,10 @@ void constructName(string &name, param_t p);
 // void writeGauge(field3D<Complex> *gauge, string name);
 // void readGauge(field3D<Complex> *gauge, string name);
 
-void gaussStart(field3D<Complex> *gauge);
+void hotStart(field3D<Complex> *gauge);
 void coldStart(field3D<Complex> *gauge);
 
-void gaussStart(field<Complex> *gauge);
+void hotStart(field<Complex> *gauge);
 void coldStart(field<Complex> *gauge);
 
 // Normalized gaussian exp(-phi*phi/2) and  <phi|phi> = 1

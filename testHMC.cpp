@@ -12,7 +12,8 @@ using namespace std;
 int main(int argc, char **argv) {
 
     param_t p;
-    p.gen = mt19937(1234);
+    mt19937 gen(1234);
+    p.gen = &gen;
 
     // Lattice size
     p.Nx = 32;
@@ -29,51 +30,51 @@ int main(int argc, char **argv) {
 
     leapfrogHMC HMCStep(p);
 
-    gaussStart(&HMCStep.gauge3D_hmc);
-    gaussReal(HMCStep.mom3D);
+    hotStart(&HMCStep.gauge3D);
+    gaussReal(&HMCStep.mom3D);
 
     // Create gaussian distributed fermion field chi. chi[LX][LY] E exp(-chi^* chi)
-    gaussComplex(HMCStep.chi);
+    gaussComplex(&HMCStep.chi);
 
     // Create pseudo fermion field, phi = D * chi
-    extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D_hmc, p.zCenter);
-    g3Dpsi(HMCStep.phi, HMCStep.chi, &HMCStep.gauge2D);
-    blas::caxpy(-I * sqrt(p.musq), HMCStep.chi->data, HMCStep.phi->data);
+    extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D, p.zCenter);
+    g3Dpsi(&HMCStep.phi, &HMCStep.chi, &HMCStep.gauge2D);
+    blas::caxpy(-I * sqrt(p.musq), HMCStep.chi.data, HMCStep.phi.data);
 
     // measure initial hamiltonian
     double H0 = 0.0;
-    H0 += blas::norm2(HMCStep.mom3D->data) * 0.5;
-    H0 += measGaugeAction(&HMCStep.gauge3D_hmc);
+    H0 += blas::norm2(HMCStep.mom3D.data) * 0.5;
+    H0 += measGaugeAction(&HMCStep.gauge3D);
     if (p.dynamic) {
-        H0 += real(blas::cDotProd(HMCStep.chi->data, HMCStep.chi->data));
+        H0 += real(blas::cDotProd(HMCStep.chi.data, HMCStep.chi.data));
     }
 
     // do forward trajectory
-    HMCStep.trajectory(HMCStep.mom3D, &HMCStep.gauge3D_hmc, HMCStep.phi);
+    HMCStep.trajectory();
 
     // measure final hamiltonian
     double H1 = 0.0;
-    H1 += blas::norm2(HMCStep.mom3D->data) * 0.5;
-    H1 += measGaugeAction(&HMCStep.gauge3D_hmc);
+    H1 += blas::norm2(HMCStep.mom3D.data) * 0.5;
+    H1 += measGaugeAction(&HMCStep.gauge3D);
     if (p.dynamic) {
-        extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D_hmc, p.zCenter);
-        cg(HMCStep.chi->data, HMCStep.phi->data, HMCStep.gauge2D, &_DdagDpsiImp);
-        H1 += real(blas::cDotProd(HMCStep.chi->data, HMCStep.phi->data));
+        extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D, p.zCenter);
+        cg(HMCStep.chi.data, HMCStep.phi.data, HMCStep.gauge2D, &_DdagDpsiImp);
+        H1 += real(blas::cDotProd(HMCStep.chi.data, HMCStep.phi.data));
     }
 
     // do backward trajectory
     p.tau = -p.tau;
-    blas::ax(-1.0, HMCStep.mom3D->data);
-    HMCStep.trajectory(HMCStep.mom3D, &HMCStep.gauge3D_hmc, HMCStep.phi);
+    blas::ax(-1.0, HMCStep.mom3D.data);
+    HMCStep.trajectory();
 
     // measure (new) initial hamiltonian
     double H2 = 0.0;
-    H2 += blas::norm2(HMCStep.mom3D->data) * 0.5;
-    H2 += measGaugeAction(&HMCStep.gauge3D_hmc);
+    H2 += blas::norm2(HMCStep.mom3D.data) * 0.5;
+    H2 += measGaugeAction(&HMCStep.gauge3D);
     if (p.dynamic) {
-        extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D_hmc, p.zCenter);
-        cg(HMCStep.chi->data, HMCStep.phi->data, HMCStep.gauge2D, &_DdagDpsiImp);
-        H2 += real(blas::cDotProd(HMCStep.chi->data, HMCStep.phi->data));
+        extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D, p.zCenter);
+        cg(HMCStep.chi.data, HMCStep.phi.data, HMCStep.gauge2D, &_DdagDpsiImp);
+        H2 += real(blas::cDotProd(HMCStep.chi.data, HMCStep.phi.data));
     }
 
     printf("H0 = %.12lf\n", H0);

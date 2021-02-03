@@ -28,7 +28,7 @@ void constructName(string &name, param_t p) {
   // name += "_tau" + to_string(p.tau) + "_nHMCstep" + to_string(p.n_step);
 }
 
-void gaussStart(field<Complex> *gauge) {
+void hotStart(field<Complex> *gauge) {
 
   int Nx = gauge->p.Nx;
   int Ny = gauge->p.Ny;
@@ -39,7 +39,7 @@ void gaussStart(field<Complex> *gauge) {
 	// gauge->write(x, y, mu, polar(1.0,drand48()));
 }
 
-void gaussStart(field3D<Complex> *gauge) {
+void hotStart(field3D<Complex> *gauge) {
 
   int Nx = gauge->p.Nx;
   int Ny = gauge->p.Ny;

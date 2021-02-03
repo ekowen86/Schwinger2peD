@@ -11,7 +11,8 @@ using namespace std;
 int main(int argc, char **argv) {
 
     param_t p;
-    p.gen = mt19937(1234);
+    mt19937 gen(1234);
+    p.gen = &gen;
 
     int sizeX[] = {8,16,32,64,128,256,16,64};
     int sizeY[] = {8,16,32,64,128,256,48,512};
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
         p.m = mass[i]; printf("m = %lf\n", p.m);
 
         // generate a random gauge field
-        field<Complex> gauge(p); gaussStart(&gauge);
+        field<Complex> gauge(p); hotStart(&gauge);
 
         // generate two random spinor fields
         field<Complex> X(p); gaussComplex(&X);
