@@ -13,7 +13,7 @@
 //   Creutz     exp[ -sigma L^2] exp[ -sigma(L-1)(L-1)]
 //   ratio:    ---------------------------------------  = exp[ -sigma]
 //              exp[ -sigma (L-1)L] exp[-sigma L(L-1)]
-void measWilsonLoops(field<Complex> *gauge, double plaq, int iter);
+void measWilsonLoops(field<Complex>& gauge, double plaq, int iter);
 
 //Pion correlation function
 //                              |----------------|
@@ -26,8 +26,8 @@ void measWilsonLoops(field<Complex> *gauge, double plaq, int iter);
 //
 // if H = Hdag, Tr(H * Hdag) = Sum_{n,m} (H_{n,m}) * (H_{n,m})^*,
 // i.e., the sum of the modulus squared of each element
-void measPionCorrelation(field<Complex> *gauge, int iter);
-double measGaugeAction(field3D<Complex> *gauge);
-Complex measPlaq(field<Complex> *gauge);
-double measTopCharge(field<Complex> *gauge);
-void measVacuumTrace(field<Complex> *gauge, int iter);
+void measPionCorrelation(field<Complex>& gauge, int iter);
+double measGaugeAction(field3D<Complex>& gauge);
+Complex measPlaq(field<Complex>& gauge);
+double measTopCharge(field<Complex>& gauge);
+void measChiralCond(field<Complex>& gauge, int iter);

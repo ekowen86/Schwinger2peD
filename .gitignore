@@ -9,7 +9,14 @@ wilson/
 # plots
 *.pdf
 
+# test script
+test.sh
+
 # executable files
 schwinger2peD
 testDirac
 testHMC
+testIO
+
+# object files
+*.o

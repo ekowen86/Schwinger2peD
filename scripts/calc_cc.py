@@ -52,7 +52,6 @@ def parse_data_file(file):
 		elif id == first_id:
 			# create the array
 			first_l = l;
-			# 0 axis is distance, 1 axis is trajectory
 			a = np.empty(len(lines) - l)
 
 		# populate the array
@@ -63,7 +62,7 @@ def parse_data_file(file):
 	return a
 
 
-cc_file = open("../jobs/2D/%s/vacuum_trace/vacuum_trace.dat" % (id), "r")
+cc_file = open("../jobs/2D/%s/cc.dat" % (id), "r")
 cc = parse_data_file(cc_file)
 cc_bar, d_cc = jackknife_mean(cc)
 cc_file.close()

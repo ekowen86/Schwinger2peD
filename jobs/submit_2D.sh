@@ -43,17 +43,17 @@ do
     mkdir -p ${ID}
     cd ${ID}
 
-    # create directories for data
-    mkdir -p {ckpoint,topo_charge,vacuum_trace,pion_corr,plots}
+    # create checkpoint directory
+    mkdir -p ckpoint
 
     # create a script file with the executable and parameters
     echo "#!/bin/bash" > run_${ID}.sh
 
     echo ../../../schwinger2peD \
-    ${L} ${L} 1 ${BETA} 1.0 ${M} \
-    ${N_THERM} ${N_SKIP} ${N_TRAJ} \
-    ${N_STEP} ${TAU} \
-    >> run_${ID}.sh
+        ${L} ${L} 1 ${BETA} 1.0 ${M} \
+        ${N_THERM} ${N_SKIP} ${N_TRAJ} \
+        ${N_STEP} ${TAU} \
+        >> run_${ID}.sh
 
     # submit to the queue
     echo "submitting job: ${ID}"

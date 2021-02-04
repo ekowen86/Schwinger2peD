@@ -30,21 +30,21 @@ int main(int argc, char **argv) {
 
     leapfrogHMC HMCStep(p);
 
-    hotStart(&HMCStep.gauge3D);
-    gaussReal(&HMCStep.mom3D);
+    hotStart(HMCStep.gauge3D);
+    gaussReal(HMCStep.mom3D);
 
     // Create gaussian distributed fermion field chi. chi[LX][LY] E exp(-chi^* chi)
-    gaussComplex(&HMCStep.chi);
+    gaussComplex(HMCStep.chi);
 
     // Create pseudo fermion field, phi = D * chi
-    extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D, p.zCenter);
-    g3Dpsi(&HMCStep.phi, &HMCStep.chi, &HMCStep.gauge2D);
+    extract2DSlice(HMCStep.gauge2D, HMCStep.gauge3D, p.zCenter);
+    g3Dpsi(HMCStep.phi, HMCStep.chi, HMCStep.gauge2D);
     blas::caxpy(-I * sqrt(p.musq), HMCStep.chi.data, HMCStep.phi.data);
 
     // measure initial hamiltonian
     double H0 = 0.0;
     H0 += blas::norm2(HMCStep.mom3D.data) * 0.5;
-    H0 += measGaugeAction(&HMCStep.gauge3D);
+    H0 += measGaugeAction(HMCStep.gauge3D);
     if (p.dynamic) {
         H0 += real(blas::cDotProd(HMCStep.chi.data, HMCStep.chi.data));
     }
@@ -55,9 +55,9 @@ int main(int argc, char **argv) {
     // measure final hamiltonian
     double H1 = 0.0;
     H1 += blas::norm2(HMCStep.mom3D.data) * 0.5;
-    H1 += measGaugeAction(&HMCStep.gauge3D);
+    H1 += measGaugeAction(HMCStep.gauge3D);
     if (p.dynamic) {
-        extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D, p.zCenter);
+        extract2DSlice(HMCStep.gauge2D, HMCStep.gauge3D, p.zCenter);
         cg(HMCStep.chi.data, HMCStep.phi.data, HMCStep.gauge2D, &_DdagDpsiImp);
         H1 += real(blas::cDotProd(HMCStep.chi.data, HMCStep.phi.data));
     }
@@ -70,9 +70,9 @@ int main(int argc, char **argv) {
     // measure (new) initial hamiltonian
     double H2 = 0.0;
     H2 += blas::norm2(HMCStep.mom3D.data) * 0.5;
-    H2 += measGaugeAction(&HMCStep.gauge3D);
+    H2 += measGaugeAction(HMCStep.gauge3D);
     if (p.dynamic) {
-        extract2DSlice(&HMCStep.gauge2D, &HMCStep.gauge3D, p.zCenter);
+        extract2DSlice(HMCStep.gauge2D, HMCStep.gauge3D, p.zCenter);
         cg(HMCStep.chi.data, HMCStep.phi.data, HMCStep.gauge2D, &_DdagDpsiImp);
         H2 += real(blas::cDotProd(HMCStep.chi.data, HMCStep.phi.data));
     }

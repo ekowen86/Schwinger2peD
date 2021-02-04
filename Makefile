@@ -1,24 +1,34 @@
 INCPATH = ./include
 SRC = lib/blas.cpp lib/dirac_op.cpp lib/hmc.cpp lib/inverters.cpp \
 	lib/io.cpp lib/measurements.cpp lib/utils.cpp
+OBJ = $(SRC:cpp=o)
+ALLEXEC = schwinger2peD testDirac testHMC testIO
 
 CXX = g++
 CXXFLAGS = -static-libstdc++ -O3 -std=c++0x
 
-all: schwinger2peD testDirac testHMC testIO
+all: $(ALLEXEC)
 
-schwinger2peD: schwinger2peD.cpp $(SRC) $(INCPATH)/* Makefile
-	@echo Compiling schwinger2peD...
-	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(SRC) schwinger2peD.cpp -o $@
+$(OBJ): $(SRC) $(INCPATH)/* Makefile
+	@echo Compiling $@...
+	$(CXX) $(CXXFLAGS) -I $(INCPATH) -c $(@:o=cpp) -o $@
 
-testDirac: testDirac.cpp $(SRC) $(INCPATH)/* Makefile
-	@echo Compiling testDirac...
-	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(SRC) testDirac.cpp -o $@
+schwinger2peD: schwinger2peD.cpp $(OBJ) $(INCPATH)/* Makefile
+	@echo Compiling $@...
+	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(OBJ) $@.cpp -o $@
 
-testHMC: testHMC.cpp $(SRC) $(INCPATH)/* Makefile
-	@echo Compiling testHMC...
-	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(SRC) testHMC.cpp -o $@
+testDirac: testDirac.cpp $(OBJ) $(INCPATH)/* Makefile
+	@echo Compiling $@...
+	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(OBJ) $@.cpp -o $@
 
-testIO: testIO.cpp $(SRC) $(INCPATH)/* Makefile
-	@echo Compiling testIO...
-	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(SRC) testIO.cpp -o $@
+testHMC: testHMC.cpp $(OBJ) $(INCPATH)/* Makefile
+	@echo Compiling $@...
+	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(OBJ) $@.cpp -o $@
+
+testIO: testIO.cpp $(OBJ) $(INCPATH)/* Makefile
+	@echo Compiling $@...
+	$(CXX) $(CXXFLAGS) -I $(INCPATH) $(OBJ) $@.cpp -o $@
+
+clean:
+	rm $(OBJ)
+	rm $(ALLEXEC)

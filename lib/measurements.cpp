@@ -3,10 +3,10 @@
 #include "dirac_op.h"
 #include "inverters.h"
 
-void measWilsonLoops(field<Complex> *gauge, double plaq, int iter)
+void measWilsonLoops(field<Complex>& gauge, double plaq, int iter)
 {
-  int Nx = gauge->p.Nx;
-  int Ny = gauge->p.Ny;
+  int Nx = gauge.p.Nx;
+  int Ny = gauge.p.Ny;
 
   std::vector<std::vector<Complex>> wLoops(Nx/2 ,std::vector<Complex> (Ny/2 ,0.0));
   std::vector<double> sigma(Nx/2, 0.0);
@@ -14,10 +14,10 @@ void measWilsonLoops(field<Complex> *gauge, double plaq, int iter)
   Complex w;
   int p1, p2, dx, dy, x, y;
   double inv_Lsq = 1.0/(Nx*Ny);
-  int loop_max = gauge->p.loop_max;
+  int loop_max = gauge.p.loop_max;
 
   //Smear the gauge field
-  field<Complex> *smeared = new field<Complex>(gauge->p);
+  field<Complex> smeared(gauge.p);
   smearLink(smeared, gauge);
 
   //Loop over all X side sizes of rectangle
@@ -34,18 +34,18 @@ void measWilsonLoops(field<Complex> *gauge, double plaq, int iter)
       Complex w = Complex(1.0,0.0);
 
       //Move in +x up to p1.
-      for(int dx=0; dx<Xrect; dx++)     w *= smeared->read(x+dx,y,0);
+      for(int dx=0; dx<Xrect; dx++)     w *= smeared.read(x+dx,y,0);
 
       //Move in +y up to p2 (p1 constant)
       int p1 = (x + Xrect)%Nx;
-      for(int dy=0; dy<Yrect; dy++)     w *= smeared->read(p1,y+dy,1);
+      for(int dy=0; dy<Yrect; dy++)     w *= smeared.read(p1,y+dy,1);
 
       //Move in -x from p1 to (p2 constant)
       int p2 = (y + Yrect)%Ny;
-      for(int dx=Xrect-1; dx>=0; dx--)  w *= conj(smeared->read(x+dx,p2,0));
+      for(int dx=Xrect-1; dx>=0; dx--)  w *= conj(smeared.read(x+dx,p2,0));
 
       //Move in -y from p2 to y
-      for(int dy=Yrect-1; dy>=0; dy--)  w *= conj(smeared->read(x,y+dy,1));
+      for(int dy=Yrect-1; dy>=0; dy--)  w *= conj(smeared.read(x,y+dy,1));
       wLoops[Xrect][Yrect] += w*inv_Lsq;
     }
     }
@@ -68,7 +68,7 @@ void measWilsonLoops(field<Complex> *gauge, double plaq, int iter)
   FILE *fp;
 
   name = "data/creutz/creutz";
-  constructName(name, gauge->p);
+  constructName(name, gauge.p);
   name += ".dat";
   fp = fopen(name.c_str(), "a");
   fprintf(fp, "%d %.16e ", iter, -log(abs(plaq)) );
@@ -81,14 +81,13 @@ void measWilsonLoops(field<Complex> *gauge, double plaq, int iter)
     for(int sizey=sizex-1; (sizey < loop_max && sizey <= sizex+1); sizey++) {
       name = "data/rect/rectWL";
       name += "_" + to_string(sizex) + "_" + to_string(sizey);
-      constructName(name, gauge->p);
+      constructName(name, gauge.p);
       name += ".dat";
       fp = fopen(name.c_str(), "a");
       fprintf(fp, "%d %.16e %.16e\n", iter, real(wLoops[sizex][sizey]), imag(wLoops[sizex][sizey]));
       fclose(fp);
     }
 
-  delete smeared;
   return;
 }
 
@@ -105,25 +104,20 @@ void measWilsonLoops(field<Complex> *gauge, double plaq, int iter)
 // i.e., the sum of the modulus squared of each element
 
 //void measWilsonLoops(field<Complex> *gauge, double plaq, int iter){
-void measPionCorrelation(field<Complex> *gauge, int iter)
-{
-    int Nx = gauge->p.Nx;
-    int Ny = gauge->p.Ny;
+void measPionCorrelation(field<Complex>& gauge, int iter) {
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
 
-    field<Complex> *propUp, *propDn, *propGuess, *source, *Dsource;
-
-    propUp = new field<Complex>(gauge->p);
-    propDn = new field<Complex>(gauge->p);
-    propGuess = new field<Complex>(gauge->p);
-    source = new field<Complex>(gauge->p);
-    Dsource = new field<Complex>(gauge->p);
+    field<Complex> propUp(gauge.p);
+    field<Complex> propDn(gauge.p);
+    field<Complex> source(gauge.p);
+    field<Complex> Dsource(gauge.p);
 
     //Up type prop
-    blas::zero(source->data);
-    blas::zero(Dsource->data);
-    blas::zero(propUp->data);
-    blas::zero(propGuess->data);
-    source->write(0, 0, 0, cUnit); // spinor index is 0
+    blas::zero(source.data);
+    blas::zero(Dsource.data);
+    blas::zero(propUp.data);
+    source.write(0, 0, 0, cUnit); // spinor index is 0
 
     // up -> (g3Dg3) * up *****
     // (g3Dg3D)^-1 * (g3Dg3) up = D^-1 * up *****
@@ -131,24 +125,20 @@ void measPionCorrelation(field<Complex> *gauge, int iter)
     g3psi(Dsource, source);
     g3Dpsi(source, Dsource, gauge);
 
-    //if (p.deflate) deflate(propGuess, Dsource, defl_evecs, defl_evals, p);
-    // Ainvpsi(propUp, source, propGuess, gauge);
-    cg(propUp->data, source->data, *gauge, &_DdagDpsi);
+    cg(propUp.data, source.data, gauge, &_DdagDpsi);
 
     //Down type prop
-    blas::zero(source->data);
-    blas::zero(Dsource->data);
-    blas::zero(propDn->data);
-    blas::zero(propGuess->data);
-    source->write(0, 0, 1, cUnit); // spinor index is 1
+    blas::zero(source.data);
+    blas::zero(Dsource.data);
+    blas::zero(propDn.data);
+    source.write(0, 0, 1, cUnit); // spinor index is 1
 
     // dn -> (g3Dg3) * dn
     g3psi(Dsource, source);
     g3Dpsi(source, Dsource, gauge);
 
     // (g3Dg3D)^-1 * (g3Dg3) dn = D^-1 * dn
-    // Ainvpsi(propDn, source, propGuess, gauge);
-    cg(propDn->data, source->data, *gauge, &_DdagDpsi);
+    cg(propDn.data, source.data, gauge, &_DdagDpsi);
 
     double pion_corr[Ny + 1];
     // Let y be the 'time' dimension
@@ -159,76 +149,36 @@ void measPionCorrelation(field<Complex> *gauge, int iter)
         //Loop over space and spin, fold propagator
         // corr = 0.0;
         for (int x = 0; x < Nx; x++) {
-            pion_corr[y] += norm(propDn->read(x,y,0));
-            pion_corr[y] += norm(propDn->read(x,y,1));
-            pion_corr[y] += norm(propUp->read(x,y,0));
-            pion_corr[y] += norm(propUp->read(x,y,1));
-            //
-            // tmp = abs((conj(propDn->read(x,y,0)) * propDn->read(x,y,0) +
-            //            conj(propDn->read(x,y,1)) * propDn->read(x,y,1) +
-            //            conj(propUp->read(x,y,0)) * propUp->read(x,y,0) +
-            //            conj(propUp->read(x,y,1)) * propUp->read(x,y,1)));
-            //
-            // corr += tmp;
+            pion_corr[y] += norm(propDn.read(x,y,0));
+            pion_corr[y] += norm(propDn.read(x,y,1));
+            pion_corr[y] += norm(propUp.read(x,y,0));
+            pion_corr[y] += norm(propUp.read(x,y,1));
         }
-
-        // pion_corr[y] = corr;
-
-        // //Compute folded propagator
-        // if ( y < ((Ny/2)+1) ) {
-        //     pion_corr[y] += corr;
-        // } else {
-        //     pion_corr[Ny-y] += corr;
-        //     pion_corr[Ny-y] /= 2.0;
-        // }
     }
 
     // use boundary conditions to get correlator at Ny (simplifies folding)
     pion_corr[Ny] = pion_corr[0];
 
-    FILE *fp = fopen("pion_corr/pion_corr.dat", "a");
-    fprintf(fp, "%d", iter);
+    FILE *fp = fopen("pion_corr.dat", "a");
+    fprintf(fp, "%06d", iter);
     // fold correlators here
     for(int y = 0; y <= (Ny / 2); y++) {
         fprintf(fp, " %.16e", (pion_corr[y] + pion_corr[Ny - y]) * 0.5);
     }
     fprintf(fp, "\n");
     fclose(fp);
-
-    // // char fname[256];
-    // string name;
-    // FILE *fp;
-    //
-    // //Full pion correlation
-    // name = "data/pion/pion";
-    // constructName(name, gauge->p);
-    // name += ".dat";
-    // // sprintf(fname, "%s", name.c_str());
-    // fp = fopen(name.c_str(), "a");
-    // fprintf(fp, "%d", iter);
-    // for(int y = 0; y < Ny; y++) {
-    //     fprintf(fp, " %.16e", pion_corr[y]);
-    // }
-    // fprintf(fp, "\n");
-    // fclose(fp);
-
-    delete propUp;
-    delete propDn;
-    delete propGuess;
-    delete source;
-    delete Dsource;
 }
 
-double measGaugeAction(field3D<Complex> *gauge) {
+double measGaugeAction(field3D<Complex>& gauge) {
 
-    double beta = gauge->p.beta;
-    double betaz = gauge->p.betaZ;
+    double beta = gauge.p.beta;
+    double betaz = gauge.p.betaZ;
     double action = 0.0;
     Complex plaq = 0.0;
 
-    int Nx = gauge->p.Nx;
-    int Ny = gauge->p.Ny;
-    int Nz = gauge->p.Nz;
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
+    int Nz = gauge.p.Nz;
 //#pragma	omp parallel for reduction (+:action)
     for(int x=0; x<Nx; x++) {
         int xp1 = (x+1)%Nx;
@@ -236,18 +186,18 @@ double measGaugeAction(field3D<Complex> *gauge) {
             int yp1 = (y+1)%Ny;
             for(int z=0; z<Nz; z++) {
                 int zp1 = (z+1)%Nz;
-                Complex plaq = (gauge->read(x,y,z,0) * gauge->read(xp1,y,z,1) *
-                	conj(gauge->read(x,yp1,z,0)) * conj(gauge->read(x,y,z,1)));
+                Complex plaq = (gauge.read(x,y,z,0) * gauge.read(xp1,y,z,1) *
+                	conj(gauge.read(x,yp1,z,0)) * conj(gauge.read(x,y,z,1)));
 
                 action += beta*real(1.0 - plaq);
                 //Compute extra dim contribution
                 if(z != Nz-1) {
                     //+x, +z, -x, -z
-                    plaq = gauge->read(x,y,z,0) * cUnit * conj(gauge->read(x,y,zp1 ,0)) * cUnit;
+                    plaq = gauge.read(x,y,z,0) * cUnit * conj(gauge.read(x,y,zp1 ,0)) * cUnit;
                     action += betaz*real(1.0 - plaq);
 
                     //+y, +z, -y, -z
-                    plaq = gauge->read(x,y,z,1) * cUnit * conj(gauge->read(x,y,zp1 ,1)) * cUnit;
+                    plaq = gauge.read(x,y,z,1) * cUnit * conj(gauge.read(x,y,zp1 ,1)) * cUnit;
                     action += betaz*real(1.0 - plaq);
                 }
             }
@@ -256,10 +206,10 @@ double measGaugeAction(field3D<Complex> *gauge) {
     return action;
 }
 
-Complex measPlaq(field<Complex> *gauge) {
+Complex measPlaq(field<Complex>& gauge) {
     Complex plaq = 0.0;
-    int Nx = gauge->p.Nx;
-    int Ny = gauge->p.Ny;
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
 
 // #pragma omp parallel for reduction(+:plaq)
     Complex u1, u2, u3, u4;
@@ -268,31 +218,31 @@ Complex measPlaq(field<Complex> *gauge) {
         for (int y = 0; y < Ny; y++) {
             int yp1 = (y + 1) % Ny;
             // Anti-clockwise plaquette, starting at (x,y)
-            u1 = gauge->read(x, y, 0);
-            u2 = gauge->read(xp1, y, 1);
-            u3 = conj(gauge->read(x, yp1, 0));
-            u4 = conj(gauge->read(x, y, 1));
+            u1 = gauge.read(x, y, 0);
+            u2 = gauge.read(xp1, y, 1);
+            u3 = conj(gauge.read(x, yp1, 0));
+            u4 = conj(gauge.read(x, y, 1));
             plaq += u1 * u2 * u3 * u4;
         }
     }
     return plaq / double(Nx * Ny);
 }
 
-double measTopCharge(field<Complex> *gauge) {
+double measTopCharge(field<Complex>& gauge) {
 
     double top = 0.0;
-    int Nx = gauge->p.Nx;
-    int Ny = gauge->p.Ny;
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
 // #pragma omp parallel for reduction(+:top)
     Complex u1, u2, u3, u4;
     for (int x = 0; x < Nx; x++) {
         int xp1 = (x + 1) % Nx;
         for (int y = 0; y < Ny; y++) {
             int yp1 = (y + 1) % Ny;
-            u1 = gauge->read(x, y, 0);
-            u2 = gauge->read(xp1, y, 1);
-            u3 = conj(gauge->read(x, yp1, 0));
-            u4 = conj(gauge->read(x, y, 1));
+            u1 = gauge.read(x, y, 0);
+            u2 = gauge.read(xp1, y, 1);
+            u3 = conj(gauge.read(x, yp1, 0));
+            u4 = conj(gauge.read(x, y, 1));
             Complex w = u1 * u2 * u3 * u4;
             top += arg(w);  // -pi < arg(w) < pi  Geometric value is an integer.
         }
@@ -301,55 +251,99 @@ double measTopCharge(field<Complex> *gauge) {
     return top / TWO_PI;
 }
 
-// this works on a 2D slice
-void measVacuumTrace(field<Complex> *gauge, int iter) {
+void measChiralCond(field<Complex>& gauge, int iter) {
 
-    int Nx = gauge->p.Nx;
-    int Ny = gauge->p.Ny;
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
 
-    field<Complex> propUp(gauge->p);
-    field<Complex> propDn(gauge->p);
-    field<Complex> propGuess(gauge->p);
-    field<Complex> source(gauge->p);
-    field<Complex> Dsource(gauge->p);
+    field<Complex> propUp(gauge.p);
+    field<Complex> propDn(gauge.p);
+    field<Complex> source(gauge.p);
+    field<Complex> Dsource(gauge.p);
 
-    //Up type prop
-    blas::zero(source.data);
-    blas::zero(Dsource.data);
-    blas::zero(propUp.data);
-    blas::zero(propGuess.data);
-    source.write(0, 0, 0, cUnit);
+    double cc = 0.0;
 
-    // up -> (g3Dg3) * up *****
-    // (g3Dg3D)^-1 * (g3Dg3) up = D^-1 * up *****
+    vector<int> vPoints;
 
-    g3psi(&Dsource, &source);
-    g3Dpsi(&source, &Dsource, gauge);
+    int nPoints = max(Nx, Ny);
 
-    //if (p.deflate) deflate(propGuess, Dsource, defl_evecs, defl_evals, p);
-    cg(propUp.data, source.data, *gauge, &_DdagDpsi);
-    // Ainvpsi(&propUp, &source, &propGuess, gauge);
+    for (int i = 0; i < nPoints; i++) {
 
-    //Down type prop
-    blas::zero(source.data);
-    blas::zero(Dsource.data);
-    blas::zero(propDn.data);
-    blas::zero(propGuess.data);
-    source.write(0, 0, 1, cUnit);
+        int n = 0;
+        do {
+            n = gauge.rand_int(0, Nx * Ny - 1);
+        } while (find(vPoints.begin(), vPoints.end(), n) != vPoints.end());
+        vPoints.push_back(n);
 
-    // dn -> (g3Dg3) * dn
-    g3psi(&Dsource, &source);
-    g3Dpsi(&source, &Dsource, gauge);
+        int x = n % Nx;
+        int y = n / Nx;
 
-    // (g3Dg3D)^-1 * (g3Dg3) dn = D^-1 * dn
-    cg(propDn.data, source.data, *gauge, &_DdagDpsi);
-    // Ainvpsi(&propDn, &source, &propGuess, gauge);
+        // Up type prop
+        blas::zero(source.data);
+        blas::zero(Dsource.data);
+        blas::zero(propUp.data);
+        source.write(x, y, 0, cUnit);
 
-    double cc = real(propUp.read(0,0,0) + propDn.read(0,0,1));
+        // up -> (g3Dg3) * up *****
+        // (g3Dg3D)^-1 * (g3Dg3) up = D^-1 * up *****
 
-    FILE *fp = fopen("vacuum_trace/vacuum_trace.dat", "a");
-    fprintf(fp, "%d", iter);
-    fprintf(fp, " %.16e", cc);
+        g3psi(Dsource, source);
+        g3Dpsi(source, Dsource, gauge);
+
+        cg(propUp.data, source.data, gauge, &_DdagDpsi);
+
+        // Down type prop
+        blas::zero(source.data);
+        blas::zero(Dsource.data);
+        blas::zero(propDn.data);
+        source.write(x, y, 1, cUnit);
+
+        // dn -> (g3Dg3) * dn
+        g3psi(Dsource, source);
+        g3Dpsi(source, Dsource, gauge);
+
+        // (g3Dg3D)^-1 * (g3Dg3) dn = D^-1 * dn
+        cg(propDn.data, source.data, gauge, &_DdagDpsi);
+
+        cc += real(propUp.read(x,y,0) + propDn.read(x,y,1));
+    }
+
+    // for (int x = 0; x < Nx; x++) {
+    //     for (int y = 0; y < Ny; y++) {
+    //         //Up type prop
+    //         blas::zero(source.data);
+    //         blas::zero(Dsource.data);
+    //         blas::zero(propUp.data);
+    //         source.write(x, y, 0, cUnit);
+    //
+    //         // up -> (g3Dg3) * up *****
+    //         // (g3Dg3D)^-1 * (g3Dg3) up = D^-1 * up *****
+    //
+    //         g3psi(Dsource, source);
+    //         g3Dpsi(source, Dsource, gauge);
+    //
+    //         cg(propUp.data, source.data, gauge, &_DdagDpsi);
+    //
+    //         //Down type prop
+    //         blas::zero(source.data);
+    //         blas::zero(Dsource.data);
+    //         blas::zero(propDn.data);
+    //         source.write(x, y, 1, cUnit);
+    //
+    //         // dn -> (g3Dg3) * dn
+    //         g3psi(Dsource, source);
+    //         g3Dpsi(source, Dsource, gauge);
+    //
+    //         // (g3Dg3D)^-1 * (g3Dg3) dn = D^-1 * dn
+    //         cg(propDn.data, source.data, gauge, &_DdagDpsi);
+    //
+    //         cc += real(propUp.read(x,y,0) + propDn.read(x,y,1));
+    //     }
+    // }
+
+    FILE *fp = fopen("cc.dat", "a");
+    fprintf(fp, "%06d", iter);
+    fprintf(fp, " %.16e", cc / double(nPoints));
     fprintf(fp, "\n");
     fclose(fp);
 }

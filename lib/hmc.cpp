@@ -24,21 +24,21 @@ int leapfrogHMC::hmc(field3D<Complex>& oldGauge, bool noMetropolis) {
 
     int accept = 0;
 
-    gauge3D.copy(&oldGauge);
-    gaussReal(&mom3D);
+    gauge3D.copy(oldGauge);
+    gaussReal(mom3D);
 
     if (gauge3D.p.dynamic) {
         //Create gaussian distributed fermion field chi. chi[LX][LY] E exp(-chi^* chi)
-        gaussComplex(&chi);
+        gaussComplex(chi);
         //Create pseudo fermion field, phi = D * chi
-        extract2DSlice(&gauge2D, &gauge3D, gauge3D.p.zCenter);
-        g3Dpsi(&phi, &chi, &gauge2D);
+        extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
+        g3Dpsi(phi, chi, gauge2D);
         blas::caxpy(-I * sqrt(gauge3D.p.musq), chi.data, phi.data);
     }
 
     double oldH = 0.0;
     oldH += blas::norm2(mom3D.data) * 0.5;
-    oldH += measGaugeAction(&gauge3D);
+    oldH += measGaugeAction(gauge3D);
     if (gauge3D.p.dynamic) {
         oldH += real(blas::cDotProd(chi.data, chi.data));
     }
@@ -47,9 +47,9 @@ int leapfrogHMC::hmc(field3D<Complex>& oldGauge, bool noMetropolis) {
 
     double newH = 0.0;
     newH += blas::norm2(mom3D.data) * 0.5;
-    newH += measGaugeAction(&gauge3D);
+    newH += measGaugeAction(gauge3D);
     if (gauge3D.p.dynamic) {
-        extract2DSlice(&gauge2D, &gauge3D, gauge3D.p.zCenter);
+        extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
         cg(chi.data, phi.data, gauge2D, &_DdagDpsiImp);
         newH += real(blas::cDotProd(chi.data, phi.data));
     }
@@ -58,7 +58,7 @@ int leapfrogHMC::hmc(field3D<Complex>& oldGauge, bool noMetropolis) {
     exp_dH = exp(-dH);
 
     if (dH <= 0 || gauge3D.rand_double() < exp_dH) accept = 1;
-    if (accept || noMetropolis) oldGauge.copy(&gauge3D);
+    if (accept || noMetropolis) oldGauge.copy(gauge3D);
 
     return accept;
 }
@@ -73,7 +73,7 @@ void leapfrogHMC::trajectory() {
   //Initial half step.
   //P_{1/2} = P_0 - dtau/2 * (fU - fD)
   forceU();
-  extract2DSlice(&gauge2D, &gauge3D, gauge3D.p.zCenter);
+  extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
   // ave_iter += forceD(fD, phi, gauge2D);
   forceD();
   update_mom(0.5 * dtau);
@@ -86,7 +86,7 @@ void leapfrogHMC::trajectory() {
 
     //P_{k+1/2} = P_{k-1/2} - dtau * (fU - fD)
     forceU();
-    extract2DSlice(&gauge2D, &gauge3D, gauge3D.p.zCenter);
+    extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
     forceD();
 
     update_mom(dtau);
@@ -98,7 +98,7 @@ void leapfrogHMC::trajectory() {
 
   //P_{n} = P_{n-1/2} - dtau/2 * (fU - fD)
   forceU();
-  extract2DSlice(&gauge2D, &gauge3D, gauge3D.p.zCenter);
+  extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
   forceD();
   update_mom(0.5 * dtau);
 
@@ -230,7 +230,7 @@ int leapfrogHMC::forceD() {
         //  phi = (D^-1 * g3 * D^-1 g3) phi.
         cg_iter += cg(phip.data, phi.data, gauge2D, &_DdagDpsiImp);
         //g3Dphi = g3D * phip
-        g3Dpsi(&g3Dphi, &phip, &gauge2D);
+        g3Dpsi(g3Dphi, phip, gauge2D);
 
         double r = 1.0;
         int Nx = gauge2D.p.Nx;

@@ -26,15 +26,15 @@ int main(int argc, char **argv) {
         p.m = mass[i]; printf("m = %lf\n", p.m);
 
         // generate a random gauge field
-        field<Complex> gauge(p); hotStart(&gauge);
+        field<Complex> gauge(p); hotStart(gauge);
 
         // generate two random spinor fields
-        field<Complex> X(p); gaussComplex(&X);
-        field<Complex> Y(p); gaussComplex(&Y);
+        field<Complex> X(p); gaussComplex(X);
+        field<Complex> Y(p); gaussComplex(Y);
 
         // check that < g3DX | Y > == < X | g3DY > to check hermiticity of D
-        field<Complex> g3DX(p); g3Dpsi(&g3DX, &X, &gauge);
-        field<Complex> g3DY(p); g3Dpsi(&g3DY, &Y, &gauge);
+        field<Complex> g3DX(p); g3Dpsi(g3DX, X, gauge);
+        field<Complex> g3DY(p); g3Dpsi(g3DY, Y, gauge);
 
         Complex c1 = blas::cDotProd(g3DX.data, Y.data);
         Complex c2 = blas::cDotProd(X.data, g3DY.data);

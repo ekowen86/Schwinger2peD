@@ -34,8 +34,8 @@ public:
         data[2*(x + p.Nx * y) + mu] = elem;
     }
 
-    void copy(const field<T> *in){
-        blas::copy(data, in->data);
+    void copy(const field<T>& in){
+        blas::copy(data, in.data);
     }
 
     unsigned int size() {
@@ -61,7 +61,7 @@ public:
         return dist(*p.gen);
     }
 
-    double rand_int(int min, int max) {
+    int rand_int(int min, int max) {
         std::uniform_int_distribution<int> dist(min, max);
         return dist(*p.gen);
     }
@@ -108,8 +108,8 @@ public:
         data[2 * (x + p.Nx * y + p.Nx * p.Ny * z) + mu] = elem;
     }
 
-    void copy(const field3D<T> *in){
-        blas::copy(data, in->data);
+    void copy(const field3D<T>& in){
+        blas::copy(data, in.data);
     }
 
     unsigned int size() {
@@ -137,7 +137,7 @@ public:
         return dist(*p.gen);
     }
 
-    double rand_int(int min, int max) {
+    int rand_int(int min, int max) {
         std::uniform_int_distribution<int> dist(min, max);
         return dist(*p.gen);
     }

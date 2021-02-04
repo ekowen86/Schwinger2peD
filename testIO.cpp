@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     printf("Generating initial lattice configuration...\n");
     field3D<Complex> gauge3D(p);
     field<Complex> gauge2D(p);
-    hotStart(&gauge3D);
+    hotStart(gauge3D);
 
     // do some hmc steps
     leapfrogHMC HMCStep(p);
@@ -50,15 +50,15 @@ int main(int argc, char **argv) {
     writeGaugeBinary(gauge3D, filenameBin);
     writeRngState(gauge3D, filenameRng);
 
-    extract2DSlice(&gauge2D, &gauge3D, p.zCenter);
-    Complex plaq0 = measPlaq(&gauge2D);
+    extract2DSlice(gauge2D, gauge3D, p.zCenter);
+    Complex plaq0 = measPlaq(gauge2D);
     printf("Average plaquette = %.12lf + %.12lf i\n", real(plaq0), imag(plaq0));
 
     // do some more hmc steps
     printf("Updating and measuring original lattice...\n");
     for (int i = 0; i < 20; i++) HMCStep.hmc(gauge3D, true);
-    extract2DSlice(&gauge2D, &gauge3D, p.zCenter);
-    Complex plaq1 = measPlaq(&gauge2D);
+    extract2DSlice(gauge2D, gauge3D, p.zCenter);
+    Complex plaq1 = measPlaq(gauge2D);
     printf("Average plaquette = %.12lf + %.12lf i\n", real(plaq1), imag(plaq1));
 
     // save the lattice and rng
@@ -66,15 +66,15 @@ int main(int argc, char **argv) {
     readGaugeBinary(gauge3D, filenameBin);
     readRngState(gauge3D, filenameRng);
 
-    extract2DSlice(&gauge2D, &gauge3D, p.zCenter);
-    Complex plaq2 = measPlaq(&gauge2D);
+    extract2DSlice(gauge2D, gauge3D, p.zCenter);
+    Complex plaq2 = measPlaq(gauge2D);
     printf("Average plaquette = %.12lf + %.12lf i\n", real(plaq2), imag(plaq2));
 
     // do some more hmc steps
     printf("Updating and measuring restored lattice...\n");
     for (int i = 0; i < 20; i++) HMCStep.hmc(gauge3D, true);
-    extract2DSlice(&gauge2D, &gauge3D, p.zCenter);
-    Complex plaq3 = measPlaq(&gauge2D);
+    extract2DSlice(gauge2D, gauge3D, p.zCenter);
+    Complex plaq3 = measPlaq(gauge2D);
     printf("Average plaquette = %.12lf + %.12lf i\n", real(plaq3), imag(plaq3));
 
     printf("Error = %.12lf + %.12f i\n", real(plaq3 - plaq1), imag(plaq3 - plaq1));
