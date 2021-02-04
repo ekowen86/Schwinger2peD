@@ -9,6 +9,7 @@
 #include <complex>
 #include <sys/time.h>
 #include <random>
+#include <algorithm>
 
 using namespace std;
 
