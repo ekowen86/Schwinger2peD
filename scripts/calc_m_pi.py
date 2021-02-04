@@ -15,10 +15,10 @@ print("beta: %f" % (beta))
 m_fermion = float(sys.argv[3])
 print("m_fermion: %f" % (m_fermion))
 R_half = int(L / 2) # half lattice size
-# tmin = int(sys.argv[4]) # min t value for fit
-# print("tmin: %d" % (tmin))
-# tmax = R_half # max t value for fit
-first_id = 100 # first configuration id
+tmin = int(sys.argv[4]) # min t value for fit
+print("tmin: %d" % (tmin))
+tmax = R_half # max t value for fit
+first_id = 200 # first configuration id
 
 m_sign = "p"
 if m_fermion < 0.0:
@@ -114,29 +114,29 @@ pion_file = open("../jobs/2D/%s/pion_corr.dat" % (id), "r")
 C_pi = parse_data_file(pion_file)
 
 # find tmin and tmax which minimize the determinant of the covariance matrix
-tmin_best = 0
-tmax_best = R_half
-err_best = np.inf
-for tmin in range(0, R_half / 2):
-	for tmax in range(tmin + 3, R_half):
-		_, _, err = pion_mass(C_pi, tmin, tmax)
-		print("%d, %d, %.12e" % (tmin, tmax - 1, err))
-		if err < err_best:
-			tmin_best = tmin
-			tmax_best = tmax
-			err_best = err
+# tmin_best = 0
+# tmax_best = R_half
+# err_best = np.inf
+# for tmin in range(0, R_half / 2):
+# 	for tmax in range(tmin + R_half / 2, R_half):
+# 		_, _, err = pion_mass(C_pi, tmin, tmax)
+# 		print("%d, %d, %.12e" % (tmin, tmax - 1, err))
+# 		if err < err_best:
+# 			tmin_best = tmin
+# 			tmax_best = tmax
+# 			err_best = err
 
 
-m_bar, d_m, z_bar, d_z = jackknife_pion_mass(C_pi, tmin_best, tmax_best)
+m_bar, d_m, z_bar, d_z = jackknife_pion_mass(C_pi, tmin, tmax)
 pion_file.close()
 
-print("tmin = %d" % (tmin_best))
-print("tmax = %d" % (tmax_best - 1))
+# print("tmin = %d" % (tmin_best))
+# print("tmax = %d" % (tmax_best - 1))
 print("m = %.12f (%.12f)" % (m_bar, d_m))
 print("z = %.12f (%.12f)" % (z_bar, d_z))
 
 mass_file = open("../jobs/2D/m_pi_%d_%d.dat" % (L, beta * 1000), "a")
-mass_file.write("%.3f %.12e %.12e\n" % (m_fermion, m_bar, d_m))
+mass_file.write("%.3f %.12e %.12e %.12e %.12e\n" % (m_fermion, m_bar, d_m, z_bar, d_z))
 mass_file.close()
 
 n = R_half + 1

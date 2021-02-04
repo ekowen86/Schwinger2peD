@@ -14,7 +14,7 @@ beta = float(sys.argv[2])
 print("beta: %f" % (beta))
 m_fermion = float(sys.argv[3])
 print("m_fermion: %f" % (m_fermion))
-first_id = 100 # first configuration id
+first_id = 200 # first configuration id
 
 m_sign = "p"
 if m_fermion < 0.0:
