@@ -10,17 +10,29 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 L = int(sys.argv[1]) # lattice size
 print("L: %d" % (L))
-beta = float(sys.argv[2])
+
+Lz = int(sys.argv[2])
+print("Lz: %d" % (Lz))
+
+beta = float(sys.argv[3])
 print("beta: %f" % (beta))
-m_fermion = float(sys.argv[3])
+
+eps3 = float(sys.argv[4])
+print("eps3: %f" % (eps3))
+
+m_fermion = float(sys.argv[5])
 print("m_fermion: %f" % (m_fermion))
+
 first_id = 200 # first configuration id
 
 m_sign = "p"
 if m_fermion < 0.0:
     m_sign = "m"
 
-id = "%d_%d_%s%d" % (L, beta * 1000, m_sign, abs(m_fermion) * 1000)
+if (Lz == 1):
+    id = "%d_%d_%s%d" % (L, round(beta * 1000), m_sign, round(abs(m_fermion) * 1000))
+else:
+    id = "%d_%d_%d_%d_%s%d" % (L, Lz, round(beta * 1000), round(eps3 * 1000), m_sign, round(abs(m_fermion) * 1000))
 print("id: %s" % (id))
 
 def jackknife_mean(a):
@@ -62,13 +74,19 @@ def parse_data_file(file):
 	return a
 
 
-cc_file = open("../jobs/2D/%s/cc.dat" % (id), "r")
+if (Lz == 1):
+	cc_file = open("../jobs/2D/%s/cc.dat" % (id), "r")
+else:
+	cc_file = open("../jobs/3D/%s/cc.dat" % (id), "r")
 cc = parse_data_file(cc_file)
 cc_bar, d_cc = jackknife_mean(cc)
 cc_file.close()
 
 print("cc = %.12f (%.12f)" % (cc_bar, d_cc))
 
-result_file = open("../jobs/2D/cc_%d_%d.dat" % (L, beta * 1000), "a")
+if (Lz == 1):
+	result_file = open("../jobs/2D/cc_%d_%d.dat" % (L, beta * 1000), "a")
+else:
+	result_file = open("../jobs/3D/cc_%d_%d_%d_%d.dat" % (L, Lz, round(beta * 1000), round(eps3 * 1000)), "a")
 result_file.write("%.3f %.12e %.12e\n" % (m_fermion, cc_bar, d_cc))
 result_file.close()

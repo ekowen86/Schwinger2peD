@@ -3,93 +3,134 @@
 #include "dirac_op.h"
 #include "inverters.h"
 
-void measWilsonLoops(field<Complex>& gauge, double plaq, int iter)
-{
-  int Nx = gauge.p.Nx;
-  int Ny = gauge.p.Ny;
+Complex measWilsonLoop(field<Complex>& gauge, int a, int b) {
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
 
-  std::vector<std::vector<Complex>> wLoops(Nx/2 ,std::vector<Complex> (Ny/2 ,0.0));
-  std::vector<double> sigma(Nx/2, 0.0);
+    Complex wSum = Complex(0.0, 0.0);
 
-  Complex w;
-  int p1, p2, dx, dy, x, y;
-  double inv_Lsq = 1.0/(Nx*Ny);
-  int loop_max = gauge.p.loop_max;
+    for (int x = 0; x < Nx; x++) {
+        for (int y = 0; y < Ny; y++) {
 
-  //Smear the gauge field
-  field<Complex> smeared(gauge.p);
-  smearLink(smeared, gauge);
+            Complex w = Complex(1.0, 0.0);
+            int x1 = x;
+            int y1 = y;
 
-  //Loop over all X side sizes of rectangle
-// #pragma omp parallel for
-  for(int Xrect=1; Xrect<loop_max; Xrect++) {
+            //Move in +x up to a
+            for (int n = 0; n < a; n++) {
+                w *= gauge.read(x1,y1,0);
+                x1 = (x1 + 1) % Nx;
+            }
 
-    //Loop over all Y side sizes of rectangle
-    for(int Yrect=1; Yrect<loop_max; Yrect++) {
+            //Move in +y up to b
+            for (int n = 0; n < b; n++) {
+                w *= gauge.read(x1,y1,1);
+                y1 = (y1 + 1) % Ny;
+            }
 
-      //Loop over all x,y starting points
-      for(x=0; x<Nx; x++)
-    for(y=0; y<Ny; y++){
+            //Move in -x from a to 0
+            for (int n = 0; n < a; n++) {
+                x1 = (x1 - 1 + Nx) % Nx;
+                w *= conj(gauge.read(x1,y1,0));
+            }
 
-      Complex w = Complex(1.0,0.0);
-
-      //Move in +x up to p1.
-      for(int dx=0; dx<Xrect; dx++)     w *= smeared.read(x+dx,y,0);
-
-      //Move in +y up to p2 (p1 constant)
-      int p1 = (x + Xrect)%Nx;
-      for(int dy=0; dy<Yrect; dy++)     w *= smeared.read(p1,y+dy,1);
-
-      //Move in -x from p1 to (p2 constant)
-      int p2 = (y + Yrect)%Ny;
-      for(int dx=Xrect-1; dx>=0; dx--)  w *= conj(smeared.read(x+dx,p2,0));
-
-      //Move in -y from p2 to y
-      for(int dy=Yrect-1; dy>=0; dy--)  w *= conj(smeared.read(x,y+dy,1));
-      wLoops[Xrect][Yrect] += w*inv_Lsq;
+            //Move in -y from b to 0
+            for (int n = 0; n < b; n++) {
+                y1 = (y1 - 1 + Ny) % Ny;
+                w *= conj(gauge.read(x1,y1,1));
+            }
+            wSum += w;
+        }
     }
-    }
-  }
-
-  //Compute string tension
-// #pragma	omp parallel for
-  for(int size=1; size<loop_max; size++) {
-    sigma[size]  = -log(abs((real(wLoops[size][size])/real(wLoops[size-1][size]))*
-        (real(wLoops[size-1][size-1])/real(wLoops[size][size-1]))));
-
-    sigma[size] += -log(abs((real(wLoops[size][size])/real(wLoops[size][size-1]))*
-        (real(wLoops[size-1][size-1])/real(wLoops[size-1][size]))));
-
-    sigma[size] *= 0.5;
-
-  }
-
-  string name;
-  FILE *fp;
-
-  name = "data/creutz/creutz";
-  constructName(name, gauge.p);
-  name += ".dat";
-  fp = fopen(name.c_str(), "a");
-  fprintf(fp, "%d %.16e ", iter, -log(abs(plaq)) );
-  for(int size=2; size<loop_max; size++)
-    fprintf(fp, "%.16e ", sigma[size]);
-  fprintf(fp, "\n");
-  fclose(fp);
-
-  for(int sizex=2; sizex<loop_max; sizex++)
-    for(int sizey=sizex-1; (sizey < loop_max && sizey <= sizex+1); sizey++) {
-      name = "data/rect/rectWL";
-      name += "_" + to_string(sizex) + "_" + to_string(sizey);
-      constructName(name, gauge.p);
-      name += ".dat";
-      fp = fopen(name.c_str(), "a");
-      fprintf(fp, "%d %.16e %.16e\n", iter, real(wLoops[sizex][sizey]), imag(wLoops[sizex][sizey]));
-      fclose(fp);
-    }
-
-  return;
+    return wSum / double(Nx * Ny);
 }
+
+// void measWilsonLoops(field<Complex>& gauge, double plaq, int iter) {
+//   int Nx = gauge.p.Nx;
+//   int Ny = gauge.p.Ny;
+//
+//   std::vector<std::vector<Complex>> wLoops(Nx/2 ,std::vector<Complex> (Ny/2 ,0.0));
+//   std::vector<double> sigma(Nx/2, 0.0);
+//
+//   Complex w;
+//   int p1, p2, dx, dy, x, y;
+//   double inv_Lsq = 1.0/(Nx*Ny);
+//   int loop_max = gauge.p.loop_max;
+//
+//   //Smear the gauge field
+//   field<Complex> smeared(gauge.p);
+//   smearLink(smeared, gauge);
+//
+//   //Loop over all X side sizes of rectangle
+// // #pragma omp parallel for
+//   for(int Xrect=1; Xrect<loop_max; Xrect++) {
+//
+//     //Loop over all Y side sizes of rectangle
+//     for(int Yrect=1; Yrect<loop_max; Yrect++) {
+//
+//       //Loop over all x,y starting points
+//       for(x=0; x<Nx; x++)
+//     for(y=0; y<Ny; y++){
+//
+//       Complex w = Complex(1.0,0.0);
+//
+//       //Move in +x up to p1.
+//       for(int dx=0; dx<Xrect; dx++)     w *= smeared.read(x+dx,y,0);
+//
+//       //Move in +y up to p2 (p1 constant)
+//       int p1 = (x + Xrect)%Nx;
+//       for(int dy=0; dy<Yrect; dy++)     w *= smeared.read(p1,y+dy,1);
+//
+//       //Move in -x from p1 to (p2 constant)
+//       int p2 = (y + Yrect)%Ny;
+//       for(int dx=Xrect-1; dx>=0; dx--)  w *= conj(smeared.read(x+dx,p2,0));
+//
+//       //Move in -y from p2 to y
+//       for(int dy=Yrect-1; dy>=0; dy--)  w *= conj(smeared.read(x,y+dy,1));
+//       wLoops[Xrect][Yrect] += w*inv_Lsq;
+//     }
+//     }
+//   }
+//
+//   //Compute string tension
+// // #pragma	omp parallel for
+//   for(int size=1; size<loop_max; size++) {
+//     sigma[size]  = -log(abs((real(wLoops[size][size])/real(wLoops[size-1][size]))*
+//         (real(wLoops[size-1][size-1])/real(wLoops[size][size-1]))));
+//
+//     sigma[size] += -log(abs((real(wLoops[size][size])/real(wLoops[size][size-1]))*
+//         (real(wLoops[size-1][size-1])/real(wLoops[size-1][size]))));
+//
+//     sigma[size] *= 0.5;
+//
+//   }
+//
+//   string name;
+//   FILE *fp;
+//
+//   name = "data/creutz/creutz";
+//   constructName(name, gauge.p);
+//   name += ".dat";
+//   fp = fopen(name.c_str(), "a");
+//   fprintf(fp, "%d %.16e ", iter, -log(abs(plaq)) );
+//   for(int size=2; size<loop_max; size++)
+//     fprintf(fp, "%.16e ", sigma[size]);
+//   fprintf(fp, "\n");
+//   fclose(fp);
+//
+//   for(int sizex=2; sizex<loop_max; sizex++)
+//     for(int sizey=sizex-1; (sizey < loop_max && sizey <= sizex+1); sizey++) {
+//       name = "data/rect/rectWL";
+//       name += "_" + to_string(sizex) + "_" + to_string(sizey);
+//       constructName(name, gauge.p);
+//       name += ".dat";
+//       fp = fopen(name.c_str(), "a");
+//       fprintf(fp, "%d %.16e %.16e\n", iter, real(wLoops[sizex][sizey]), imag(wLoops[sizex][sizey]));
+//       fclose(fp);
+//     }
+//
+//   return;
+// }
 
 //Pion correlation function
 //                              |----------------|
@@ -226,6 +267,47 @@ Complex measPlaq(field<Complex>& gauge) {
         }
     }
     return plaq / double(Nx * Ny);
+}
+
+double measFieldStrength(field<Complex>& gauge) {
+    double E = 0.0;
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
+
+    Complex u1, u2, u3, u4;
+    double F;
+    for (int x = 0; x < Nx; x++) {
+        int xp1 = (x + 1) % Nx;
+        int xm1 = (x - 1 + Nx) % Nx;
+        for (int y = 0; y < Ny; y++) {
+            int yp1 = (y + 1) % Ny;
+            int ym1 = (y - 1 + Ny) % Ny;
+
+            u1 = gauge.read(x, y, 1);
+            u1 *= gauge.read(x, yp1, 0);
+            u1 *= conj(gauge.read(xp1, y, 1));
+            u1 *= conj(gauge.read(x, y, 0));
+
+            u2 = gauge.read(x, y, 0);
+            u2 *= conj(gauge.read(xp1, ym1, 1));
+            u2 *= conj(gauge.read(x, ym1, 0));
+            u2 *= gauge.read(x, ym1, 1);
+
+            u3 = conj(gauge.read(x, ym1, 1));
+            u3 *= conj(gauge.read(xm1, ym1, 0));
+            u3 *= gauge.read(xm1, ym1, 1);
+            u3 *= gauge.read(xm1, y, 0);
+
+            u4 = conj(gauge.read(xm1, y, 0));
+            u4 *= gauge.read(xm1, y, 1);
+            u4 *= gauge.read(xm1, yp1, 0);
+            u4 *= conj(gauge.read(x, y, 1));
+
+            F = imag(u1 + u2 + u3 + u4) * 0.25;
+            E += (F * F);
+        }
+    }
+    return E / double(Nx * Ny) * 0.25;
 }
 
 double measTopCharge(field<Complex>& gauge) {

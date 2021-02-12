@@ -5,18 +5,23 @@
 jobs/2D/
 jobs/3D/
 wilson/
+plaq/
 
 # plots
 *.pdf
 
-# test script
+# test scripts
 test.sh
+test2D.sh
+test3D.sh
 
 # executable files
 schwinger2peD
 testDirac
 testHMC
 testIO
+testPlaq
+testWilsonFlow
 
 # object files
 *.o

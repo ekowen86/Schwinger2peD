@@ -10,12 +10,21 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 L = int(sys.argv[1]) # lattice size
 print("L: %d" % (L))
-beta = float(sys.argv[2])
+
+Lz = int(sys.argv[2])
+print("Lz: %d" % (Lz))
+
+beta = float(sys.argv[3])
 print("beta: %f" % (beta))
-m_fermion = float(sys.argv[3])
+
+eps3 = float(sys.argv[4])
+print("eps3: %f" % (eps3))
+
+m_fermion = float(sys.argv[5])
 print("m_fermion: %f" % (m_fermion))
+
 R_half = int(L / 2) # half lattice size
-tmin = int(sys.argv[4]) # min t value for fit
+tmin = int(sys.argv[6]) # min t value for fit
 print("tmin: %d" % (tmin))
 tmax = R_half # max t value for fit
 first_id = 200 # first configuration id
@@ -24,7 +33,10 @@ m_sign = "p"
 if m_fermion < 0.0:
 	m_sign = "m"
 
-id = "%d_%d_%s%d" % (L, beta * 1000, m_sign, abs(m_fermion) * 1000)
+if (Lz == 1):
+    id = "%d_%d_%s%d" % (L, round(beta * 1000), m_sign, round(abs(m_fermion) * 1000))
+else:
+    id = "%d_%d_%d_%d_%s%d" % (L, Lz, round(beta * 1000), round(eps3 * 1000), m_sign, round(abs(m_fermion) * 1000))
 print("id: %s" % (id))
 
 def corr_fit(t, m, z):
@@ -110,7 +122,10 @@ def parse_data_file(file):
 
 
 # parse the data file
-pion_file = open("../jobs/2D/%s/pion_corr.dat" % (id), "r")
+if (Lz == 1):
+	pion_file = open("../jobs/2D/%s/pion_corr.dat" % (id), "r")
+else:
+	pion_file = open("../jobs/3D/%s/pion_corr.dat" % (id), "r")
 C_pi = parse_data_file(pion_file)
 
 # find tmin and tmax which minimize the determinant of the covariance matrix
@@ -135,7 +150,10 @@ pion_file.close()
 print("m = %.12f (%.12f)" % (m_bar, d_m))
 print("z = %.12f (%.12f)" % (z_bar, d_z))
 
-mass_file = open("../jobs/2D/m_pi_%d_%d.dat" % (L, beta * 1000), "a")
+if (Lz == 1):
+	mass_file = open("../jobs/2D/m_pi_%d_%d.dat" % (L, beta * 1000), "a")
+else:
+	mass_file = open("../jobs/3D/m_pi_%d_%d_%d_%d.dat" % (L, Lz, round(beta * 1000), round(eps3 * 1000)), "a")
 mass_file.write("%.3f %.12e %.12e %.12e %.12e\n" % (m_fermion, m_bar, d_m, z_bar, d_z))
 mass_file.close()
 
@@ -168,5 +186,8 @@ plt.errorbar(R, corr_bar, yerr=d_corr, color="blue", marker='o', ms=5, mew=0.5, 
 plt.plot(R_A, corr_A, color="blue", linewidth=0.5)
 plt.xlabel(r"$t$")
 plt.ylabel(r"$\langle C_{\pi}(0) C_{\pi}(t) \rangle $")
-plt.savefig("../jobs/2D/%s/plots/pi_corr.pdf" % (id))
+if (Lz == 1):
+	plt.savefig("../jobs/2D/%s/pi_corr.pdf" % (id))
+else:
+	plt.savefig("../jobs/3D/%s/pi_corr.pdf" % (id))
 plt.close()

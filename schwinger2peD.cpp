@@ -10,10 +10,14 @@
 #include "io.h"
 #include "measurements.h"
 
+// wilson loops take a long time to measure
+#define MEASURE_WILSON_LOOPS 0
+
 using namespace std;
 
 int quickTopoCharge(field3D<Complex>& gauge);
 void writeTopoCharge(field3D<Complex>& gauge, int n);
+void doWilsonFlow(const field<Complex>& gauge, int n);
 
 int main(int argc, char **argv) {
 
@@ -45,7 +49,7 @@ int main(int argc, char **argv) {
     p.n_step = atoi(argv[10]); printf("hmcSteps: %d\n", p.n_step);
     p.tau = stod(argv[11]); printf("hmcTau: %.3f\n", p.tau);
 
-    p.dynamic = true;
+    p.dynamic = false;
     p.lockedZ = true;
     p.max_iter_cg = 10000;
     p.eps = 1e-16;
@@ -114,7 +118,7 @@ int main(int argc, char **argv) {
         extract2DSlice(gauge2D, gauge3D, p.zCenter);
         measChiralCond(gauge2D, n);
         measPionCorrelation(gauge2D, n);
-        // writeTopoCharge(gauge3D, n);
+        doWilsonFlow(gauge2D, n);
 
         // write trajectory data to file and console
         FILE* file = fopen("plaq.dat", "a");
@@ -123,8 +127,9 @@ int main(int argc, char **argv) {
         for (int z = 0; z < p.Nz; z++) {
             // print plaquette on each slice
             extract2DSlice(gauge2D, gauge3D, z);
-            fprintf(file, " %.12e", real(measPlaq(gauge2D)));
-            printf(" %.8f", real(measPlaq(gauge2D)));
+            double plaq = real(measPlaq(gauge2D));
+            fprintf(file, " %.12e", plaq);
+            printf(" %.8f", plaq);
         }
         fprintf(file, " %.2f", double(nStuck) / double(nSkip));
         printf(" %.2f", double(nStuck) / double(nSkip));
@@ -191,4 +196,65 @@ void writeTopoCharge(field3D<Complex>& gauge, int n) {
     }
     fprintf(file, "\n");
     fclose(file);
+}
+
+void doWilsonFlow(const field<Complex>& gauge, int n) {
+
+    // copy the gauge field
+    field<Complex> gauge_wf(gauge.p);
+    gauge_wf.copy(gauge);
+
+    double fs;
+    int loopMax = min(gauge.p.Nx, gauge.p.Ny) / 2;
+    int nLoops = loopMax * 3 + 1;
+    std::vector<double> wLoops(nLoops);
+
+    double t_wf_max = 30.0;
+    double dt = 0.02;
+    int n_wf = int(ceil(t_wf_max / dt));
+
+    char path[50];
+    FILE* file;
+
+    for (int i = 0; i <= n_wf; i++) {
+        double t = i * dt;
+        if (i) wilsonFlow(gauge_wf, dt);
+
+        // measure field strength and wilson loops
+        double fs = measFieldStrength(gauge_wf);
+
+        // write field strength to file
+        sprintf(path, "wf/field_strength.%d", n);
+        file = fopen(path, "a");
+        fprintf(file, "%.02lf", t);
+        fprintf(file, " %.12e", fs);
+        fprintf(file, "\n");
+        fclose(file);
+
+#if MEASURE_WILSON_LOOPS
+        // measure wilson loops in this order
+        // (1,1), (1,2)
+        // (2,1), (2,2), (2,3)
+        //        (3,2), (3,3), (3,4) ...
+        for (int l = 1; l <= loopMax; l++) {
+            if (l != 1) {
+                wLoops[l * 3 - 1] = real(measWilsonLoop(gauge_wf, l, l - 1));
+            }
+            wLoops[l * 3] = real(measWilsonLoop(gauge_wf, l, l));
+            if (l != loopMax) {
+                wLoops[l * 3 + 1] = real(measWilsonLoop(gauge_wf, l, l + 1));
+            }
+        }
+
+        // write wilson loops to file
+        sprintf(path, "wf/wilson_loops.%d", n);
+        file = fopen(path, "a");
+        fprintf(file, "%.02lf", t);
+        for (int l = 0; l < nLoops; l++) {
+            fprintf(file, " %.12e", wLoops[l]);
+        }
+        fprintf(file, "\n");
+        fclose(file);
+#endif // MEASURE_WILSON_LOOPS
+    }
 }
