@@ -307,7 +307,7 @@ double measFieldStrength(field<Complex>& gauge) {
             E += (F * F);
         }
     }
-    return E / double(Nx * Ny) * 0.25;
+    return E / double(Nx * Ny) * 0.5;
 }
 
 double measTopCharge(field<Complex>& gauge) {

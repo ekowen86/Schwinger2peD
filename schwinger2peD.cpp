@@ -49,8 +49,7 @@ int main(int argc, char **argv) {
     p.n_step = atoi(argv[10]); printf("hmcSteps: %d\n", p.n_step);
     p.tau = stod(argv[11]); printf("hmcTau: %.3f\n", p.tau);
 
-    p.dynamic = false;
-    p.lockedZ = true;
+    p.dynamic = true;
     p.max_iter_cg = 10000;
     p.eps = 1e-16;
 
@@ -220,14 +219,16 @@ void doWilsonFlow(const field<Complex>& gauge, int n) {
         double t = i * dt;
         if (i) wilsonFlow(gauge_wf, dt);
 
-        // measure field strength and wilson loops
+        // measure field strength
+        double plaq = real(measPlaq(gauge_wf));
         double fs = measFieldStrength(gauge_wf);
 
         // write field strength to file
         sprintf(path, "wf/field_strength.%d", n);
         file = fopen(path, "a");
         fprintf(file, "%.02lf", t);
-        fprintf(file, " %.12e", fs);
+        fprintf(file, " %.12e", fs); // clover definition
+        fprintf(file, " %.12e", 1.0 - real(plaq)); // plaquette definition
         fprintf(file, "\n");
         fclose(file);
 

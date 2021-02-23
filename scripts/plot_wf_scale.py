@@ -40,12 +40,12 @@ else:
 print("id: %s" % (id))
 
 first_id = 200 # first configuration id
-last_id = 7200 # last configuration id
+last_id = 2200 # last configuration id
 id_inc = 20 # configuration id increment
 
 t_max = 30.0 # maximum wilson flow time
 dt = 0.02 # wilson flow time increment
-E0 = 0.01 # target value of t^2 * E for t0 and w0
+E0 = 0.1 # target value of t^2 * E for t0 and w0
 
 
 def jackknife_mean(a):
@@ -232,7 +232,7 @@ if (t0[0] != 0.0):
 	plt.annotate("$t_0 = %.3f \pm %.3f$" % (t0[0],t0[1]), (t0[0],E0), xytext=(t0[0],E0 * 1.05), ha='right')
 plt.xlabel("$t$")
 plt.ylabel("$t^2 \\langle E(t) \\rangle$")
-plt.savefig("%s/plots/t0.pdf" % (path))
+plt.savefig("%s/t0.pdf" % (path))
 plt.close()
 
 # plot t * d/dt(t^2 * <E>) vs t
@@ -249,5 +249,5 @@ if (w0[0] != 0.0):
 	plt.annotate("$w_0^2 = %.3f \pm %.3f$" % (w0[0],w0[1]), (w0[0],E0), xytext=(w0[0],E0 * 1.05), ha='right')
 plt.xlabel("$t$")
 plt.ylabel("$d/dt \\left( t^2 \\langle E(t) \\rangle \\right) t$")
-plt.savefig("%s/plots/w0.pdf" % (path))
+plt.savefig("%s/w0.pdf" % (path))
 plt.close()

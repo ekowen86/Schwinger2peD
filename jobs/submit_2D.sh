@@ -9,8 +9,8 @@ M_END=-0.30
 M_INC=-0.02
 
 # hmc parameters
-N_STEP=25
-TAU=0.1
+N_STEP=30
+TAU=0.2
 
 # number of trajectories
 N_THERM=200
@@ -44,7 +44,7 @@ do
     cd ${ID}
 
     # create checkpoint directory
-    mkdir -p ckpoint
+    mkdir -p {ckpoint,wf}
 
     # create a script file with the executable and parameters
     echo "#!/bin/bash" > run_${ID}.sh

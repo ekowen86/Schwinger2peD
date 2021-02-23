@@ -65,46 +65,69 @@ int leapfrogHMC::hmc(field3D<Complex>& oldGauge, bool noMetropolis) {
 
 void leapfrogHMC::trajectory() {
 
-  // time step
-  double dtau = gauge3D.p.tau / gauge3D.p.n_step;
+    // time step
+    double dtau = gauge3D.p.tau / gauge3D.p.n_step;
 
-  // Start HMC trajectory
-  //----------------------------------------------------------
-  //Initial half step.
-  //P_{1/2} = P_0 - dtau/2 * (fU - fD)
-  forceU();
-  extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
-  // ave_iter += forceD(fD, phi, gauge2D);
-  forceD();
-  update_mom(0.5 * dtau);
+    //Initial half step.
+    //P_{1/2} = P_0 - dtau/2 * (fU - fD)
+    forceU();
+    // ave_iter += forceD(fD, phi, gauge2D);
+    forceD();
+    update_mom(0.5 * dtau);
 
-  // intermediate steps
-  for (int k = 1; k < gauge3D.p.n_step; k++) {
+    // intermediate steps
+    for (int k = 1; k < gauge3D.p.n_step; k++) {
 
-    //U_{k} = exp(i dtau P_{k-1/2}) * U_{k-1}
+      //U_{k} = exp(i dtau P_{k-1/2}) * U_{k-1}
+      update_gauge(dtau);
+
+      //P_{k+1/2} = P_{k-1/2} - dtau * (fU - fD)
+      forceU();
+      forceD();
+
+      update_mom(dtau);
+    }
+
+    //Final half step.
+    //U_{n} = exp(i dtau P_{n-1/2}) * U_{n-1}
     update_gauge(dtau);
 
-    //P_{k+1/2} = P_{k-1/2} - dtau * (fU - fD)
+    //P_{n} = P_{n-1/2} - dtau/2 * (fU - fD)
     forceU();
-    extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
     forceD();
-
-    update_mom(dtau);
-  }
-
-  //Final half step.
-  //U_{n} = exp(i dtau P_{n-1/2}) * U_{n-1}
-  update_gauge(dtau);
-
-  //P_{n} = P_{n-1/2} - dtau/2 * (fU - fD)
-  forceU();
-  extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
-  forceD();
-  update_mom(0.5 * dtau);
-
-  // HMC trajectory complete
-  //----------------------------------------------------------
+    update_mom(0.5 * dtau);
 }
+
+// void leapfrogHMC::trajectory() {
+//
+//     double dtau1 = gauge3D.p.tau / 6.0;
+//
+//     update_mom_fermion(0.5 * dtau1);
+//
+//     for (int k = 1; k < 6; k++) {
+//         trajectory2();
+//         update_mom_fermion(dtau1);
+//     }
+//
+//     trajectory2();
+//     update_mom_fermion(0.5 * dtau1);
+// }
+//
+// void leapfrogHMC::trajectory2() {
+//
+//     double dtau2 = gauge3D.p.tau / (12.0 * 6.0);
+//
+//     update_mom_gauge(0.5 * dtau2);
+//
+//     for (int k = 1; k < 12; k++) {
+//
+//         update_gauge(dtau2);
+//         update_mom_gauge(dtau2);
+//     }
+//
+//     update_gauge(dtau2);
+//     update_mom_gauge(0.5 * dtau2);
+// }
 
 void leapfrogHMC::forceU() {
 
@@ -186,13 +209,38 @@ void leapfrogHMC::forceU() {
   }
 }
 
-//P_{k+1/2} = P_{k-1/2} - dtau * (fU + fD)
 void leapfrogHMC::update_mom(double dtau) {
 
-    //Always update from the gauge fields
+    forceU();
     blas::axpy(-dtau, fU.data, mom3D.data);
 
     //Update from the 2D fermion field
+    if (gauge3D.p.dynamic) {
+        int Nx = gauge3D.p.Nx;
+        int Ny = gauge3D.p.Ny;
+        for (int x = 0; x < Nx; x++) {
+            for (int y = 0; y < Ny; y++) {
+                for (int mu = 0; mu < 2; mu++) {
+                    double temp = mom3D.read(x,y,gauge3D.p.zCenter,mu);
+                    temp += fD.read(x,y,mu) * dtau;
+                    mom3D.write(x,y,gauge3D.p.zCenter,mu, temp);
+                }
+            }
+        }
+    }
+}
+
+//P_{k+1/2} = P_{k-1/2} - dtau * (fU + fD)
+void leapfrogHMC::update_mom_gauge(double dtau) {
+
+    forceU();
+    blas::axpy(-dtau, fU.data, mom3D.data);
+}
+
+void leapfrogHMC::update_mom_fermion(double dtau) {
+
+    //Update from the 2D fermion field
+    forceD();
     if (gauge3D.p.dynamic) {
         int Nx = gauge3D.p.Nx;
         int Ny = gauge3D.p.Ny;
@@ -220,6 +268,7 @@ void leapfrogHMC::update_gauge(double dtau) {
 
 // Optimise this to operate only on a single parity of sites.
 int leapfrogHMC::forceD() {
+    extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
     int cg_iter = 0;
     if(gauge3D.p.dynamic == true) {
 

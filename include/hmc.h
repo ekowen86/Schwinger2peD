@@ -36,8 +36,11 @@ public:
     leapfrogHMC(param_t p);
     int hmc(field3D<Complex>& oldGauge, bool noMetropolis = false);
     void trajectory();
+    // void trajectory2();
     void forceU();
     int forceD();
     void update_mom(double dtau);
+    void update_mom_gauge(double dtau);
+    void update_mom_fermion(double dtau);
     void update_gauge(double dtau);
 };

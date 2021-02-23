@@ -40,7 +40,6 @@ int main(int argc, char **argv) {
     p.tau = stod(argv[12]); printf("hmcTau: %.3f\n", p.tau);
 
     p.dynamic = false;
-    p.lockedZ = true;
     p.max_iter_cg = 10000;
     p.eps = 1e-16;
 
