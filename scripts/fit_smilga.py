@@ -91,7 +91,7 @@ def combined_fit(m, mc, g, p0):
 # fit pion mass to get critical mass and effective coupling
 # popt, pcov = opt.curve_fit(m_fit, m_pi[0], m_pi[1], [0.13, 0.5], m_pi[2])
 # popt, pcov = opt.curve_fit(cc_fit, cc[0], cc[1], [0.13, 0.5, 0.8], cc[2])
-popt, pcov = opt.curve_fit(combined_fit, combined_m, combined_data, [0.32, 1.0, 0.8], combined_err)
+popt, pcov = opt.curve_fit(combined_fit, combined_m, combined_data, [0.1, 0.5, 0.8], combined_err)
 mc = (popt[0], np.sqrt(pcov[0][0]))
 g = (popt[1], np.sqrt(pcov[1][1]))
 p0 = (popt[2], np.sqrt(pcov[2][2]))
@@ -102,8 +102,8 @@ print("g  = %.12f (%.12f)" % (g[0], g[1]))
 print("p0 = %.12f (%.12f)" % (p0[0], p0[1]))
 
 
-m_min = -0.6
-m_max = 0.2
+m_min = -0.3
+m_max = 0.1
 
 # create best fit curve data
 m_A = np.linspace(m_min, m_max, 1000)
@@ -138,7 +138,7 @@ plt.figure()
 plt.xlim(m_min, m_max)
 plt.errorbar(cc_all[0], cc_all[1], yerr=cc_all[2], color="black", marker='o', ms=5, mew=0.5, mfc='none', linestyle='none', linewidth=0.5, capsize=2.5, capthick=0.5)
 plt.plot(m_A, cc_A, color="black", linewidth=0.5, linestyle='dashed', label=(r"$\langle \bar{\psi} \psi \rangle = p_c + 0.388 (m_0 + m_c)^{1/3} g^{2/3}$" + "\n $m_c = %.3f \pm %.3f$\n $g = %.3f \pm %.3f$\n $p_c = %.3f \pm %.3f$" % (mc[0], mc[1], g[0], g[1], p0[0], p0[1])))
-plt.legend(loc='center right', fontsize=10, handlelength=2.5, frameon=False)
+plt.legend(loc='upper left', fontsize=10, handlelength=2.5, frameon=False)
 plt.xlabel(r"$m_0$")
 plt.ylabel(r"$\langle \bar{\psi} \psi \rangle$")
 if (Lz == 1):

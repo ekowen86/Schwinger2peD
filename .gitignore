@@ -2,8 +2,7 @@
 .DS_Store
 
 # jobs directory
-jobs/2D/
-jobs/3D/
+jobs/
 wilson/
 plaq/
 

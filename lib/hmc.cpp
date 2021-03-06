@@ -131,82 +131,103 @@ void leapfrogHMC::trajectory() {
 
 void leapfrogHMC::forceU() {
 
-  Complex plaq = 0.0, plaq0 = 0.0;
-  double temp = 0.0;
-  int xp1, xm1, yp1, ym1, zp1, zm1;
+    int xp1, xm1, yp1, ym1, zp1, zm1;
 
-  int Nx = gauge3D.p.Nx;
-  int Ny = gauge3D.p.Ny;
-  int Nz = gauge3D.p.Nz;
-  double beta = gauge3D.p.beta;
-  double betaz = gauge3D.p.betaZ;
+    int Nx = gauge3D.p.Nx;
+    int Ny = gauge3D.p.Ny;
+    int Nz = gauge3D.p.Nz;
+    double betaZ = gauge3D.p.betaZ;
+    double f;
+    Complex u1, u2, u3, u4;
 
-  for(int x=0; x<Nx; x++) {
-    xp1 = (x+1)%Nx;
-    xm1 = (x-1+Nx)%Nx;
-    for(int y=0; y<Ny; y++) {
-      yp1 = (y+1)%Ny;
-      ym1 = (y-1+Ny)%Ny;
-      for(int z=0; z<Nz; z++) {
-	zp1 = (z+1)%Nz;
-	zm1 = (z-1+Nz)%Nz;
+    for (int x = 0; x < Nx; x++) {
+        xp1 = (x + 1) % Nx;
+        xm1 = (x - 1 + Nx) % Nx;
+        for (int y = 0; y < Ny; y++) {
+            yp1 = (y + 1) % Ny;
+            ym1 = (y - 1 + Ny) % Ny;
+            for (int z = 0; z < Nz; z++) {
+                zp1 = (z + 1) % Nz;
+                zm1 = (z - 1 + Nz) % Nz;
 
-	//X dir
-	//-------
-	// +x, +y, -x, -y
-	plaq0 = gauge3D.read(x,y,z,0) * gauge3D.read(xp1,y,z,1) *
-	  conj(gauge3D.read(x,yp1,z,0)) * conj(gauge3D.read(x,y,z,1));
+                double beta = gauge3D.p.beta;
+                if (gauge3D.p.linearBeta && (z < gauge3D.p.zCenter)) {
+                    // vary the coupling linearly to zero away from the center slice
+                    beta *= double(z) / double(gauge3D.p.zCenter);
+                } else if (gauge3D.p.linearBeta && (z > gauge3D.p.zCenter)) {
+                    beta *= double(gauge3D.p.Nz - z - 1) / double(gauge3D.p.zCenter);
+                }
 
-	temp = beta*(plaq0.imag());
+                //X dir
+                //-------
+                f = 0.0;
 
-	// -y, +x, +y, -x
-	plaq = conj(gauge3D.read(x,ym1,z,1)) * gauge3D.read(x,ym1,z,0) *
-	  gauge3D.read(xp1,ym1,z,1) * conj(gauge3D.read(x,y,z,0));
+                // +x, +y, -x, -y
+                u1 = gauge3D.read(x,y,z,0);
+                u2 = gauge3D.read(xp1,y,z,1);
+                u3 = conj(gauge3D.read(x,yp1,z,0));
+                u4 = conj(gauge3D.read(x,y,z,1));
+                f += beta * imag(u1 * u2 * u3 * u4);
 
-	temp -= beta*(plaq.imag());
+                // -y, +x, +y, -x
+                u1 = conj(gauge3D.read(x,ym1,z,1));
+                u2 = gauge3D.read(x,ym1,z,0);
+                u3 = gauge3D.read(xp1,ym1,z,1);
+                u4 = conj(gauge3D.read(x,y,z,0));
+                f -= beta * imag(u1 * u2 * u3 * u4);
 
-	if(z != Nz-1) {
-	  // +x, +z, -x, -z
-	  plaq = gauge3D.read(x,y,z,0) * cUnit * conj(gauge3D.read(x,y,zp1,0)) * cUnit;
-	  temp += betaz*(plaq.imag());
-	}
+                if (z != Nz-1) {
+                    // +x, +z, -x, -z
+                    u1 = gauge3D.read(x,y,z,0);
+                    u2 = conj(gauge3D.read(x,y,zp1,0));
+                    f += betaZ * imag(u1 * u2);
+                }
 
-	if(z != 0) {
-	  // -z, +x, +z, -x
-	  plaq = cUnit * gauge3D.read(x,y,zm1,0) * cUnit * conj(gauge3D.read(x,y,z,0));
-	  temp -= betaz*(plaq.imag());
-	}
+                if (z != 0) {
+                    // -z, +x, +z, -x
+                    u1 = gauge3D.read(x,y,zm1,0);
+                    u2 = conj(gauge3D.read(x,y,z,0));
+                    f -= betaZ * imag(u1 * u2);
+                }
 
-	fU.write(x,y,z,0, temp);
+                fU.write(x, y, z, 0, f);
 
-	temp = 0.0;
+                //Y dir
+                //------
+                f = 0.0;
 
-	//Y dir
-	//------
-	// +y, -x, -y, +x
-	plaq = gauge3D.read(x,y,z,1) * conj(gauge3D.read(xm1,yp1,z,0)) * conj(gauge3D.read(xm1,y,z,1)) * gauge3D.read(xm1,y,z,0);
+                // +y, -x, -y, +x
+                u1 = gauge3D.read(x,y,z,1);
+                u2 = conj(gauge3D.read(xm1,yp1,z,0));
+                u3 = conj(gauge3D.read(xm1,y,z,1));
+                u4 = gauge3D.read(xm1,y,z,0);
+                f += beta * imag(u1 * u2 * u3 * u4);
 
-	temp += beta*(plaq.imag());
+                // +x, +y, -x, -y
+                u1 = gauge3D.read(x,y,z,0);
+                u2 = gauge3D.read(xp1,y,z,1);
+                u3 = conj(gauge3D.read(x,yp1,z,0));
+                u4 = conj(gauge3D.read(x,y,z,1));
+                f -= beta * imag(u1 * u2 * u3 * u4);
 
-	//This plaquette was aleady computed. We want the conjugate.
-	temp -= beta*(plaq0.imag());
+                if (z != Nz-1) {
+                    // y, z, -y, -z
+                    u1 = gauge3D.read(x,y,z,1);
+                    u2 = conj(gauge3D.read(x,y,zp1,1));
+                    f += betaZ * imag(u1 * u2);
+                }
 
-	if(z != Nz-1) {
-	  // y, z, -y, -z
-	  plaq = gauge3D.read(x,y,z,1) * cUnit * conj(gauge3D.read(x,y,zp1,1)) * cUnit;
-	  temp += betaz*(plaq.imag());
-	}
+                if (z != 0) {
+                    // -z, +y, +z, -y
+                    u1 = gauge3D.read(x,y,zm1,1);
+                    u2 = conj(gauge3D.read(x,y,z,1));
+                    f -= betaZ * imag(u1 * u2);
+                }
 
-	if(z != 0) {
-	  // -z, +y, +z, -y
-	  plaq = cUnit * gauge3D.read(x,y,zm1,1) * cUnit * conj(gauge3D.read(x,y,z,1));
-	  temp -= betaz*(plaq.imag());
-	}
-
-	fU.write(x,y,z,1, temp);
-      }
+                fU.write(x, y, z, 1, f);
+            }
+        }
     }
-  }
 }
 
 void leapfrogHMC::update_mom(double dtau) {

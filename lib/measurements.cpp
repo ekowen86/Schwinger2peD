@@ -212,34 +212,48 @@ void measPionCorrelation(field<Complex>& gauge, int iter) {
 
 double measGaugeAction(field3D<Complex>& gauge) {
 
-    double beta = gauge.p.beta;
-    double betaz = gauge.p.betaZ;
+    double betaZ = gauge.p.betaZ;
     double action = 0.0;
-    Complex plaq = 0.0;
 
     int Nx = gauge.p.Nx;
     int Ny = gauge.p.Ny;
     int Nz = gauge.p.Nz;
-//#pragma	omp parallel for reduction (+:action)
-    for(int x=0; x<Nx; x++) {
-        int xp1 = (x+1)%Nx;
-        for(int y=0; y<Ny; y++) {
-            int yp1 = (y+1)%Ny;
-            for(int z=0; z<Nz; z++) {
-                int zp1 = (z+1)%Nz;
-                Complex plaq = (gauge.read(x,y,z,0) * gauge.read(xp1,y,z,1) *
-                	conj(gauge.read(x,yp1,z,0)) * conj(gauge.read(x,y,z,1)));
+    Complex u1, u2, u3, u4;
+    for (int x = 0; x < Nx; x++) {
+        int xp1 = (x + 1) % Nx;
+        for (int y = 0; y < Ny; y++) {
+            int yp1 = (y + 1) % Ny;
+            for (int z = 0; z < Nz; z++) {
+                int zp1 = (z + 1) % Nz;
 
-                action += beta*real(1.0 - plaq);
+                double beta = gauge.p.beta;
+                if (gauge.p.linearBeta && (z < gauge.p.zCenter)) {
+                    beta *= double(z) / double(gauge.p.zCenter);
+                } else if (gauge.p.linearBeta && (z > gauge.p.zCenter)) {
+                    beta *= double(gauge.p.Nz - z - 1) / double(gauge.p.zCenter);
+                }
+
+                u1 = gauge.read(x,y,z,0);
+                u2 = gauge.read(xp1,y,z,1);
+                u3 = conj(gauge.read(x,yp1,z,0));
+                u4 = conj(gauge.read(x,y,z,1));
+
+                double plaq = real(u1 * u2 * u3 * u4);
+                action += beta * (1.0 - plaq);
+
                 //Compute extra dim contribution
-                if(z != Nz-1) {
+                if(z != Nz - 1) {
                     //+x, +z, -x, -z
-                    plaq = gauge.read(x,y,z,0) * cUnit * conj(gauge.read(x,y,zp1 ,0)) * cUnit;
-                    action += betaz*real(1.0 - plaq);
+                    u1 = gauge.read(x,y,z,0);
+                    u2 = conj(gauge.read(x,y,zp1,0));
+                    plaq = real(u1 * u2);
+                    action += betaZ * (1.0 - plaq);
 
                     //+y, +z, -y, -z
-                    plaq = gauge.read(x,y,z,1) * cUnit * conj(gauge.read(x,y,zp1 ,1)) * cUnit;
-                    action += betaz*real(1.0 - plaq);
+                    u1 = gauge.read(x,y,z,1);
+                    u2 = conj(gauge.read(x,y,zp1,1));
+                    plaq = real(u1 * u2);
+                    action += betaZ * real(1.0 - plaq);
                 }
             }
         }
@@ -308,6 +322,39 @@ double measFieldStrength(field<Complex>& gauge) {
         }
     }
     return E / double(Nx * Ny) * 0.5;
+}
+
+void drawInstantons(field<Complex>& gauge) {
+
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
+    Complex u1, u2, u3, u4;
+    double a1, a2, a3, a4;
+    printf("\n\n\n\n\n\n\n");
+    int q = 0;
+    for (int x = 0; x < Nx; x++) {
+        int xp1 = (x + 1) % Nx;
+        for (int y = 0; y < Ny; y++) {
+            int yp1 = (y + 1) % Ny;
+            u1 = gauge.read(x, y, 0);
+            u2 = gauge.read(xp1, y, 1);
+            u3 = conj(gauge.read(x, yp1, 0));
+            u4 = conj(gauge.read(x, y, 1));
+
+            double w = arg(u1) + arg(u2) + arg(u3) + arg(u4);
+            if (w <= -PI) {
+                printf(" +");
+                q++;
+            } else if (w >= PI) {
+                printf(" -");
+                q--;
+            } else {
+                printf("  ");
+            }
+        }
+        printf("\n");
+    }
+    printf("%+d\n", q);
 }
 
 double measTopCharge(field<Complex>& gauge) {

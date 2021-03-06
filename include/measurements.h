@@ -16,5 +16,6 @@ void measPionCorrelation(field<Complex>& gauge, int iter);
 double measGaugeAction(field3D<Complex>& gauge);
 Complex measPlaq(field<Complex>& gauge);
 double measFieldStrength(field<Complex>& gauge);
+void drawInstantons(field<Complex>& gauge);
 double measTopCharge(field<Complex>& gauge);
 void measChiralCond(field<Complex>& gauge, int iter);
