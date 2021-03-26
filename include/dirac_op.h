@@ -12,4 +12,4 @@ void g2psi(field<Complex>& out, const field<Complex>& in);
 void g1psi(field<Complex>& out, const field<Complex>& in);
 
 void _DdagDpsi(vector<Complex>& out, const vector<Complex>& in, const field<Complex>& gauge);
-void _DdagDpsiImp(vector<Complex>& out, const vector<Complex>& in, const field<Complex>& gauge);
+// void _DdagDpsiImp(vector<Complex>& out, const vector<Complex>& in, const field<Complex>& gauge);

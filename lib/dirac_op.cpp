@@ -132,11 +132,11 @@ void _DdagDpsi(vector<Complex>& out, const vector<Complex>& in, const field<Comp
     blas::copy(out, outField.data);
 }
 
-void _DdagDpsiImp(vector<Complex>& out, const vector<Complex>& in, const field<Complex>& gauge) {
-    field<Complex> outField(gauge.p);
-    field<Complex> inField(gauge.p);
-    blas::copy(outField.data, out);
-    blas::copy(inField.data, in);
-    DdagDpsi(outField, inField, gauge);
-    blas::caxpy(gauge.p.musq, in, outField.data, out);
-}
+// void _DdagDpsiImp(vector<Complex>& out, const vector<Complex>& in, const field<Complex>& gauge) {
+//     field<Complex> outField(gauge.p);
+//     field<Complex> inField(gauge.p);
+//     blas::copy(outField.data, out);
+//     blas::copy(inField.data, in);
+//     DdagDpsi(outField, inField, gauge);
+//     blas::caxpy(gauge.p.musq, in, outField.data, out);
+// }

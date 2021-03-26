@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
         extract2DSlice(gauge2D, gauge3D, p.zCenter);
         measChiralCond(gauge2D, n);
         measPionCorrelation(gauge2D, n);
-        doWilsonFlow(gauge2D, n);
+        // doWilsonFlow(gauge2D, n);
 
         // write trajectory data to file and console
         FILE* file = fopen("plaq.dat", "a");

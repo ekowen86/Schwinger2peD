@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     // Create pseudo fermion field, phi = D * chi
     extract2DSlice(HMCStep.gauge2D, HMCStep.gauge3D, p.zCenter);
     g3Dpsi(HMCStep.phi, HMCStep.chi, HMCStep.gauge2D);
-    blas::caxpy(-I * sqrt(p.musq), HMCStep.chi.data, HMCStep.phi.data);
+    // blas::caxpy(-I * sqrt(p.musq), HMCStep.chi.data, HMCStep.phi.data);
 
     // measure initial hamiltonian
     double H0 = 0.0;
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     H1 += measGaugeAction(HMCStep.gauge3D);
     if (p.dynamic) {
         extract2DSlice(HMCStep.gauge2D, HMCStep.gauge3D, p.zCenter);
-        cg(HMCStep.chi.data, HMCStep.phi.data, HMCStep.gauge2D, &_DdagDpsiImp);
+        cg(HMCStep.chi.data, HMCStep.phi.data, HMCStep.gauge2D, &_DdagDpsi);
         H1 += real(blas::cDotProd(HMCStep.chi.data, HMCStep.phi.data));
     }
 
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     H2 += measGaugeAction(HMCStep.gauge3D);
     if (p.dynamic) {
         extract2DSlice(HMCStep.gauge2D, HMCStep.gauge3D, p.zCenter);
-        cg(HMCStep.chi.data, HMCStep.phi.data, HMCStep.gauge2D, &_DdagDpsiImp);
+        cg(HMCStep.chi.data, HMCStep.phi.data, HMCStep.gauge2D, &_DdagDpsi);
         H2 += real(blas::cDotProd(HMCStep.chi.data, HMCStep.phi.data));
     }
 

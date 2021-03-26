@@ -33,7 +33,7 @@ int leapfrogHMC::hmc(field3D<Complex>& oldGauge, bool noMetropolis) {
         //Create pseudo fermion field, phi = D * chi
         extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
         g3Dpsi(phi, chi, gauge2D);
-        blas::caxpy(-I * sqrt(gauge3D.p.musq), chi.data, phi.data);
+        // blas::caxpy(-I * sqrt(gauge3D.p.musq), chi.data, phi.data);
     }
 
     double oldH = 0.0;
@@ -50,7 +50,7 @@ int leapfrogHMC::hmc(field3D<Complex>& oldGauge, bool noMetropolis) {
     newH += measGaugeAction(gauge3D);
     if (gauge3D.p.dynamic) {
         extract2DSlice(gauge2D, gauge3D, gauge3D.p.zCenter);
-        cg(chi.data, phi.data, gauge2D, &_DdagDpsiImp);
+        cg(chi.data, phi.data, gauge2D, &_DdagDpsi);
         newH += real(blas::cDotProd(chi.data, phi.data));
     }
 
@@ -298,7 +298,7 @@ int leapfrogHMC::forceD() {
         //Ainvpsi inverts using the DdagD (g3Dg3D) operator, returns
         // phip = (D^-1 * Ddag^-1)
         //  phi = (D^-1 * g3 * D^-1 g3) phi.
-        cg_iter += cg(phip.data, phi.data, gauge2D, &_DdagDpsiImp);
+        cg_iter += cg(phip.data, phi.data, gauge2D, &_DdagDpsi);
         //g3Dphi = g3D * phip
         g3Dpsi(g3Dphi, phip, gauge2D);
 
