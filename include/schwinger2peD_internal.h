@@ -48,7 +48,7 @@ typedef struct {
   double m = -0.06;
   // double musq = 0.0;
   bool dynamic = true;
-  bool linearBeta = true;
+  bool linearBeta = false;
 
   //Smearing
   double alpha = 0.5;
