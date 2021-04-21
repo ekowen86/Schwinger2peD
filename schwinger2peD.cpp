@@ -11,13 +11,14 @@
 #include "measurements.h"
 
 // wilson loops take a long time to measure
-#define MEASURE_WILSON_LOOPS 0
+#define MEASURE_WILSON_LOOPS 1
 
 using namespace std;
 
 int quickTopoCharge(field3D<Complex>& gauge);
 void writeTopoCharge(field3D<Complex>& gauge, int n);
 void doWilsonFlow(const field<Complex>& gauge, int n);
+std::vector<double> getWilsonLoops(const field<Complex>& gauge);
 
 int main(int argc, char **argv) {
 
@@ -99,10 +100,13 @@ int main(int argc, char **argv) {
             prevTopoCharge = topoCharge;
         } else if (nCkpoint) {
             // don't write initial output for checkpoint start
+            extract2DSlice(gauge2D, gauge3D, p.zCenter);
+            doWilsonFlow(gauge2D, n);
             continue;
         }
 
         writeTopoCharge(gauge3D, n);
+        // extract2DSlice(gauge2D, gauge3D, p.zCenter);
 
         if (n % nSkip) continue;
 
@@ -117,7 +121,7 @@ int main(int argc, char **argv) {
         extract2DSlice(gauge2D, gauge3D, p.zCenter);
         measChiralCond(gauge2D, n);
         measPionCorrelation(gauge2D, n);
-        // doWilsonFlow(gauge2D, n);
+        doWilsonFlow(gauge2D, n);
 
         // write trajectory data to file and console
         FILE* file = fopen("plaq.dat", "a");
@@ -183,18 +187,22 @@ void writeTopoCharge(field3D<Complex>& gauge, int n) {
     // smear the gauge field and measure topological charge
     for (int z = 0; z < gauge.p.Nz; z++) {
         coolLink(coolGauge[z], 10);
+        // if (z == 0) drawInstantons(coolGauge[z]);
         topoCharge[z] = measTopCharge(coolGauge[z]);
         topoChargeInt[z] = int(round(topoCharge[z]));
+        // topoChargeBig[z] = measTopChargeBig(coolGauge[z], 2);
         // topoChargeIntBig[z] = int(round(topoChargeBig[z]));
     }
 
     for (int z = 0; z < gauge.p.Nz; z++) {
         // round topological charge to the nearest integer
         fprintf(file, " %+d", topoChargeInt[z]);
+        // fprintf(file, " %+d", topoChargeIntBig[z]);
     }
     for (int z = 0; z < gauge.p.Nz; z++) {
         // exact measured value of topological charge
         fprintf(file, " %.16e", topoCharge[z]);
+        // fprintf(file, " %.16e", topoChargeBig[z]);
     }
     fprintf(file, "\n");
     fclose(file);
@@ -207,9 +215,6 @@ void doWilsonFlow(const field<Complex>& gauge, int n) {
     gauge_wf.copy(gauge);
 
     double fs;
-    int loopMax = min(gauge.p.Nx, gauge.p.Ny) / 2;
-    int nLoops = loopMax * 3 + 1;
-    std::vector<double> wLoops(nLoops);
 
     double t_wf_max = 30.0;
     double dt = 0.02;
@@ -236,29 +241,41 @@ void doWilsonFlow(const field<Complex>& gauge, int n) {
         fclose(file);
 
 #if MEASURE_WILSON_LOOPS
-        // measure wilson loops in this order
-        // (1,1), (1,2)
-        // (2,1), (2,2), (2,3)
-        //        (3,2), (3,3), (3,4) ...
-        for (int l = 1; l <= loopMax; l++) {
-            if (l != 1) {
-                wLoops[l * 3 - 1] = real(measWilsonLoop(gauge_wf, l, l - 1));
-            }
-            wLoops[l * 3] = real(measWilsonLoop(gauge_wf, l, l));
-            if (l != loopMax) {
-                wLoops[l * 3 + 1] = real(measWilsonLoop(gauge_wf, l, l + 1));
-            }
-        }
-
+        std::vector<double> wLoops = getWilsonLoops(gauge_wf);
         // write wilson loops to file
+        char path[50];
+        FILE* file;
         sprintf(path, "wf/wilson_loops.%d", n);
         file = fopen(path, "a");
         fprintf(file, "%.02lf", t);
-        for (int l = 0; l < nLoops; l++) {
+        for (int l = 0; l < wLoops.size(); l++) {
             fprintf(file, " %.12e", wLoops[l]);
         }
         fprintf(file, "\n");
         fclose(file);
 #endif // MEASURE_WILSON_LOOPS
     }
+}
+
+std::vector<double> getWilsonLoops(const field<Complex>& gauge) {
+    // measure wilson loops in this order
+    // (1,1), (1,2)
+    // (2,1), (2,2), (2,3)
+    //        (3,2), (3,3), (3,4) ...
+
+    int loopMax = min(gauge.p.Nx, gauge.p.Ny) / 2;
+    int nLoops = loopMax * 3 - 2;
+    std::vector<double> wLoops(nLoops);
+
+    for (int l = 1; l <= loopMax; l++) {
+        if (l != 1) {
+            wLoops[l * 3 - 4] = real(measWilsonLoop(gauge, l, l - 1));
+        }
+        wLoops[l * 3 - 3] = real(measWilsonLoop(gauge, l, l));
+        if (l != loopMax) {
+            wLoops[l * 3 - 2] = real(measWilsonLoop(gauge, l, l + 1));
+        }
+    }
+
+    return wLoops;
 }

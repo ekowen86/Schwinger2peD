@@ -6,9 +6,7 @@ import scipy.optimize as opt
 import cmath
 import sys
 import warnings
-from scipy import interpolate
-from scipy.optimize import fsolve
-from scipy.misc import derivative
+from statistics import jackknifeMean
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -39,29 +37,23 @@ else:
     path = "../jobs/3D/%s" % id
 print("id: %s" % (id))
 
-first_id = 200 # first configuration id
-last_id = 2200 # last configuration id
-id_inc = 20 # configuration id increment
+first_id = int(sys.argv[6])
+print("first_id: %d" % (first_id))
 
-t_max = 30.0 # maximum wilson flow time
-dt = 0.02 # wilson flow time increment
-E0 = 0.1 # target value of t^2 * E for t0 and w0
+last_id = int(sys.argv[7])
+print("last_id: %d" % (last_id))
 
+id_inc = int(sys.argv[8])
+print("id_inc: %d" % (id_inc))
 
-def jackknife_mean(a):
-	n = len(a)
-	f_n = float(n)
-	a_bar = np.mean(a)
-	d_a = 0.0
+t_max = float(sys.argv[9])
+print("t_max: %f" % (t_max))
 
-	for i in range(0, n):
+dt = float(sys.argv[10])
+print("dt: %f" % (dt))
 
-		# copy the array, deleting the current value
-		# and add to the error
-		d_a += (np.mean(np.delete(a, i)) - a_bar)**2.0
-
-	d_a = np.sqrt((f_n - 1) / f_n * d_a)
-	return (a_bar, d_a)
+E0 = float(sys.argv[11])
+print("E0: %f" % (E0))
 
 
 def calc_t0(t, E):
@@ -76,8 +68,8 @@ def calc_t0(t, E):
 		return 0.0
 
 	i = findE0[0][0]
-	t2E_1 = (t2E[i] - t2E[i-1]) / dt
-	t0 = (E0 - t2E[i-1]) / t2E_1 + (t[i] - dt)
+	t2E_1 = (t2E[i] - t2E[i-1]) / dt # first derivative
+	t0 = (E0 - t2E[i-1]) / t2E_1 + (t[i] - dt) # interpolate
 	return t0
 
 
@@ -114,8 +106,8 @@ def calc_w0(t, E):
 		return 0.0
 
 	i = findE0[0][0]
-	W_1 = (W[i] - W[i-1]) / dt
-	return (E0 - W[i-1]) / W_1 + (t[i] - dt)
+	W_1 = (W[i] - W[i-1]) / dt # first derivative
+	return (E0 - W[i-1]) / W_1 + (t[i] - dt) # interpolate
 
 
 def jackknife_w0(t, E):
@@ -204,7 +196,7 @@ W = np.zeros((n_wf, 2)) # t * d/dt(t^2 * E(t))
 
 for i in range(0, n_wf):
 	t = T[i]
-	E[i] = jackknife_mean(field_strength[i,:])
+	E[i] = jackknifeMean(field_strength[i,:])
 	t2E[i] = t * t * E[i]
 
 for i in range(1, n_wf - 1):

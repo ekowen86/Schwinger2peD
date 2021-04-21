@@ -3,7 +3,7 @@
 #include "dirac_op.h"
 #include "inverters.h"
 
-Complex measWilsonLoop(field<Complex>& gauge, int a, int b) {
+Complex measWilsonLoop(const field<Complex>& gauge, int a, int b) {
     int Nx = gauge.p.Nx;
     int Ny = gauge.p.Ny;
 

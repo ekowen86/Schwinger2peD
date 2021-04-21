@@ -31,9 +31,9 @@ if m_fermion < 0.0:
     m_sign = "m"
 
 if (Lz == 1):
-    id = "%d_L%d_%s%d" % (L, round(beta * 1000), m_sign, round(abs(m_fermion) * 1000))
+    id = "2D/%d_%d_%s%d" % (L, round(beta * 1000), m_sign, round(abs(m_fermion) * 1000))
 else:
-    id = "%d_%d_L%d_%d_%s%d" % (L, Lz, round(beta * 1000), round(abs(eps3) * 1000), m_sign, round(abs(m_fermion) * 1000))
+    id = "3D/%d_%d_%d_%d_%s%d" % (L, Lz, round(beta * 1000), round(abs(eps3) * 1000), m_sign, round(abs(m_fermion) * 1000))
 print("id: %s" % (id))
 
 
@@ -57,10 +57,7 @@ def parse_data_file(file):
 	return a
 
 
-if (Lz == 1):
-	topo_charge_file = open("../jobs/2D/%s/topo_charge.dat" % (id), "r")
-else:
-	topo_charge_file = open("../jobs/3D/%s/topo_charge.dat" % (id), "r")
+topo_charge_file = open("../jobs/%s/topo_charge.dat" % (id), "r")
 topo_charge = parse_data_file(topo_charge_file)
 topo_charge_file.close()
 

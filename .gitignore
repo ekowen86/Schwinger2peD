@@ -24,3 +24,6 @@ testWilsonFlow
 
 # object files
 *.o
+
+# compiled python code
+*.pyc

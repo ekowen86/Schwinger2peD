@@ -10,7 +10,7 @@
 // 2 Dimensional routines
 //-----------------------------------------------------------------------------------
 
-Complex measWilsonLoop(field<Complex>& gauge, int a, int b);
+Complex measWilsonLoop(const field<Complex>& gauge, int a, int b);
 // void measWilsonLoops(field<Complex>& gauge, double plaq, int iter);
 void measPionCorrelation(field<Complex>& gauge, int iter);
 double measGaugeAction(field3D<Complex>& gauge);

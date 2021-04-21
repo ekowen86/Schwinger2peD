@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 import cmath
@@ -27,27 +29,21 @@ R_half = int(L / 2) # half lattice size
 tmin = int(sys.argv[6]) # min t value for fit
 print("tmin: %d" % (tmin))
 tmax = R_half # max t value for fit
-first_id = 200 # first configuration id
+
+first_traj = int(sys.argv[7])
+print("first_traj: %d" % (first_traj))
 
 m_sign = "p"
 if m_fermion < 0.0:
 	m_sign = "m"
 
 if (Lz == 1):
-    id = "%d_%d_%s%d" % (L, round(beta * 1000), m_sign, round(abs(m_fermion) * 1000))
+    id = "2D/%d_%d_%s%d" % (L, round(beta * 1000), m_sign, round(abs(m_fermion) * 1000))
 else:
-    id = "%d_%d_%d_%d_%s%d" % (L, Lz, round(beta * 1000), round(eps3 * 1000), m_sign, round(abs(m_fermion) * 1000))
+    id = "3D/%d_%d_%d_%d_%s%d" % (L, Lz, round(beta * 1000), round(eps3 * 1000), m_sign, round(abs(m_fermion) * 1000))
 print("id: %s" % (id))
 
 def corr_fit(t, m, z):
-	# a = 0.0
-	#
-	# # this includes periodic finite size effects from 5 lattices away (only affects z, not m)
-	# for n in range(-5, 6):
-	#	a += z * np.exp(-m * abs(t - L * n))
-	#
-	# return a
-
 	a = z * np.exp(-m * t)
 	b = z * np.exp(-m * (L - t))
 	return a + b
@@ -66,9 +62,7 @@ def pion_mass(corr, tmin, tmax):
 
 	popt, pcov = opt.curve_fit(corr_fit, r[tmin:tmax], corr_bar[tmin:tmax], [1.0, 1.0], sigma=d_corr[tmin:tmax])
 	m = popt[0]
-	# d_m = np.sqrt(pcov[0][0])
 	z = popt[1]
-	# d_z = np.sqrt(pcov[1][1])
 
 	err = 0.0
 	for t in range(tmin, tmax):
@@ -86,7 +80,7 @@ def jackknife_pion_mass(corr, tmin, tmax):
 	d_z = 0.0
 
 	for i in range(0, n):
-		# copy the array and delete the current id
+		# copy the array and delete the current trajectory
 		# calculate the pion mass and add to the error
 		m_del, z_del, _ = pion_mass(np.delete(corr, i, axis=1), tmin, tmax)
 		d_m += (m_del - m_bar)**2.0
@@ -103,11 +97,11 @@ def parse_data_file(file):
 	first_l = 0
 	for l, line in enumerate(lines):
 		tokens = line.split()
-		id = int(tokens[0])
-		if id < first_id:
-			# skip lines before first id
+		traj = int(tokens[0])
+		if traj < first_traj:
+			# skip lines before first trajectory
 			continue
-		elif id == first_id:
+		elif traj == first_traj:
 			# create the array
 			first_l = l;
 			# 0 axis is distance, 1 axis is trajectory
@@ -116,46 +110,35 @@ def parse_data_file(file):
 		# populate the array
 		for t, token in enumerate(tokens):
 			if (t == 0):
-				continue # skip trajectory id
+				continue # skip trajectory index
 			a[t-1, l - first_l] = float(token)
 	return a
 
 
 # parse the data file
-if (Lz == 1):
-	pion_file = open("../jobs/2D/%s/pion_corr.dat" % (id), "r")
-else:
-	pion_file = open("../jobs/3D/%s/pion_corr.dat" % (id), "r")
+pion_file = open("../jobs/%s/pion_corr.dat" % (id), "r")
 C_pi = parse_data_file(pion_file)
 
-# find tmin and tmax which minimize the determinant of the covariance matrix
-# tmin_best = 0
-# tmax_best = R_half
-# err_best = np.inf
-# for tmin in range(0, R_half / 2):
-# 	for tmax in range(tmin + R_half / 2, R_half):
-# 		_, _, err = pion_mass(C_pi, tmin, tmax)
-# 		print("%d, %d, %.12e" % (tmin, tmax - 1, err))
-# 		if err < err_best:
-# 			tmin_best = tmin
-# 			tmax_best = tmax
-# 			err_best = err
-
-
 m_bar, d_m, z_bar, d_z = jackknife_pion_mass(C_pi, tmin, tmax)
+m = (m_bar, d_m)
+z = (z_bar, d_z)
 pion_file.close()
 
 # print("tmin = %d" % (tmin_best))
 # print("tmax = %d" % (tmax_best - 1))
-print("m = %.12f (%.12f)" % (m_bar, d_m))
-print("z = %.12f (%.12f)" % (z_bar, d_z))
+print("m = %.12f (%.12f)" % (m[0], m[1]))
+print("z = %.12f (%.12f)" % (z[0], z[1]))
 
-if (Lz == 1):
-	mass_file = open("../jobs/2D/m_pi_%d_%d.dat" % (L, beta * 1000), "a")
-else:
-	mass_file = open("../jobs/3D/m_pi_%d_%d_%d_%d.dat" % (L, Lz, round(beta * 1000), round(eps3 * 1000)), "a")
-mass_file.write("%.3f %.12e %.12e %.12e %.12e\n" % (m_fermion, m_bar, d_m, z_bar, d_z))
-mass_file.close()
+# if (Lz == 1):
+# 	mass_file = open("../jobs/2D/m_pi_%d_%d.dat" % (L, beta * 1000), "a")
+# else:
+# 	mass_file = open("../jobs/3D/m_pi_%d_%d_%d_%d.dat" % (L, Lz, round(beta * 1000), round(eps3 * 1000)), "a")
+# mass_file.write("%.3f %.12e %.12e %.12e %.12e\n" % (m_fermion, m_bar, d_m, z_bar, d_z))
+# mass_file.close()
+
+result_file = open("m_pi.dat", "a")
+result_file.write("%d %d %.3f %.3f %.3f %.12e %.12e %.12e %.12e\n" % (L, Lz, beta, eps3, m_fermion, m[0], m[1], z[0], z[1]))
+result_file.close()
 
 n = R_half + 1
 R = np.empty(n)
@@ -171,7 +154,7 @@ for i in range(0, n):
 R_A = np.linspace(0, R_half + 1, 1000)
 corr_A = np.zeros(len(R_A))
 for r in range(0, len(R_A)):
-	corr_A[r] = corr_fit(R_A[r], m_bar, z_bar)
+	corr_A[r] = corr_fit(R_A[r], m[0], z[0])
 
 plt.rcParams.update({
 	"text.usetex": False,
@@ -181,13 +164,9 @@ plt.rcParams.update({
 plt.figure()
 plt.xlim(0, R_half + 1)
 plt.yscale("log")
-# plt.ylim(0.0, chi[1] + 0.1)
 plt.errorbar(R, corr_bar, yerr=d_corr, color="blue", marker='o', ms=5, mew=0.5, mfc='none', linestyle='none', linewidth=0.5, capsize=2.5, capthick=0.5)
 plt.plot(R_A, corr_A, color="blue", linewidth=0.5)
 plt.xlabel(r"$t$")
 plt.ylabel(r"$\langle C_{\pi}(0) C_{\pi}(t) \rangle $")
-if (Lz == 1):
-	plt.savefig("../jobs/2D/%s/pi_corr.pdf" % (id))
-else:
-	plt.savefig("../jobs/3D/%s/pi_corr.pdf" % (id))
+plt.savefig("../jobs/%s/pi_corr.pdf" % (id))
 plt.close()
