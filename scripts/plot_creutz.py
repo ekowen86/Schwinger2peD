@@ -116,7 +116,7 @@ for i in range(0, len(R2inv)):
 
 	# measure smeared (with wilson flow)
 	T = (R - 2.0)**2.0 / 4; # smearing radius is sqrt(2dt) in d dimensions
-	t = int(T * 50)
+	t = min(int(T * 50), n_wf - 1)
 	w00 = wilsonLoops[t, i * 3]
 	w01 = wilsonLoops[t, i * 3 + 1]
 	w10 = wilsonLoops[t, i * 3 + 2]
