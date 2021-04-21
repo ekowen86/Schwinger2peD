@@ -177,12 +177,15 @@ void writeTopoCharge(field3D<Complex>& gauge, int n) {
 
     double topoCharge[gauge.p.Nz];
     int topoChargeInt[gauge.p.Nz];
+    // double topoChargeBig[gauge.p.Nz];
+    // int topoChargeIntBig[gauge.p.Nz];
 
     // smear the gauge field and measure topological charge
     for (int z = 0; z < gauge.p.Nz; z++) {
         coolLink(coolGauge[z], 10);
         topoCharge[z] = measTopCharge(coolGauge[z]);
         topoChargeInt[z] = int(round(topoCharge[z]));
+        // topoChargeIntBig[z] = int(round(topoChargeBig[z]));
     }
 
     for (int z = 0; z < gauge.p.Nz; z++) {

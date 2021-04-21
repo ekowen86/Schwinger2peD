@@ -18,4 +18,5 @@ Complex measPlaq(field<Complex>& gauge);
 double measFieldStrength(field<Complex>& gauge);
 void drawInstantons(field<Complex>& gauge);
 double measTopCharge(field<Complex>& gauge);
+double measTopChargeBig(field<Complex>& gauge, int N);
 void measChiralCond(field<Complex>& gauge, int iter);

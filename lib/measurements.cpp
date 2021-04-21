@@ -380,6 +380,41 @@ double measTopCharge(field<Complex>& gauge) {
     return top / TWO_PI;
 }
 
+// measure topological charge within an NxN wilson loop
+
+double measTopChargeBig(field<Complex>& gauge, int N) {
+    double top = 0.0;
+    int Nx = gauge.p.Nx;
+    int Ny = gauge.p.Ny;
+    Complex u;
+    for (int x = 0; x < Nx; x += N) {
+        for (int y = 0; y < Ny; y += N) {
+            int x1 = x;
+            int y1 = y;
+            u = Complex(1.0, 0.0);
+            for (int n = 0; n < N; n++) {
+                u *= gauge.read(x1, y1, 0);
+                x1 = (x1 + 1) % Nx;
+            }
+            for (int n = 0; n < N; n++) {
+                u *= gauge.read(x1, y1, 1);
+                y1 = (y1 + 1) % Ny;
+            }
+            for (int n = 0; n < N; n++) {
+                x1 = (x1 - 1 + Nx) % Nx;
+                u *= conj(gauge.read(x1, y1, 0));
+            }
+            for (int n = 0; n < N; n++) {
+                y1 = (y1 - 1 + Ny) % Ny;
+                u *= conj(gauge.read(x1, y1, 1));
+            }
+            top += arg(u);  // -pi < arg(w) < pi  Geometric value is an integer.
+        }
+    }
+
+    return top / TWO_PI;
+}
+
 void measChiralCond(field<Complex>& gauge, int iter) {
 
     int Nx = gauge.p.Nx;
