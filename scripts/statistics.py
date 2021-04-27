@@ -25,6 +25,8 @@ def jackknifeCreutz(w00, w01, w10, w11):
 	n = len(w00) # number of data values (int)
 	f_n = float(n) # number of data values (float)
 	mean = creutzRatio(w00, w01, w10, w11)
+	if mean != mean: # check for nan
+		return (0.0, float('inf'))
 	err = 0.0
 
 	for i in range(0, n):

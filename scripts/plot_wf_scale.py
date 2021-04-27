@@ -7,6 +7,7 @@ import cmath
 import sys
 import warnings
 from statistics import jackknifeMean
+from statistics import autocorrTime
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -189,9 +190,33 @@ w0 = jackknife_w0(T, field_strength)
 print("t0 = %.12f (%.12f)" % (t0[0], t0[1]))
 print("w0 = %.12f (%.12f)" % (w0[0], w0[1]))
 
+result_file = open("../jobs/wf_scale.dat", "a")
+result_file.write("%d %d %.3f %.3f %.3f %.12e %.12e %.12e %.12e\n" % \
+	(L, Lz, beta, eps3, m_fermion, t0[0], t0[1], w0[0], w0[1]))
+result_file.close()
+
 E = np.empty((n_wf, 2))
 t2E = np.empty((n_wf, 2)) # t^2 * E(t)
 W = np.zeros((n_wf, 2)) # t * d/dt(t^2 * E(t))
+
+# write field strength statistics to data file
+
+file = open("%s/field_strength.dat" % (path), "w")
+for i in range(0, n_wf):
+	file.write("%.3f" % (i * dt))
+	value = jackknifeMean(field_strength[i,:])
+	tau = autocorrTime(field_strength[i,:])
+
+	t = T[i]
+	t2E[i,0] = t * t * value[0]
+	t2E[i,1] = t * t * value[1]
+	if (i != 0) and (i != n_wf - 1):
+		W[i] = jackknife_W(field_strength[i-1,:], field_strength[i+1,:], t)
+
+	file.write(" %.12f %.12f %.12f %.12f %.12f %.12f %.12f\n" % \
+		(value[0], value[1], t2E[i,0], t2E[i,1], W[i,0], W[i,1], tau))
+
+file.close();
 
 
 for i in range(0, n_wf):
